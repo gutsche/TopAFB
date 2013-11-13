@@ -334,8 +334,8 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
 			  obs2D_gen =  hEmpty->GetYaxis()->GetBinCenter( hEmpty->FindBin( asymVar_gen, obs2D_gen ) );
 			  if ( combineLepMinus )
                 {
-				  asymVarMinus =  hEmpty->GetBinCenter( hEmpty->FindBin( asymVarMinus, obs2D ) );
-				  asymVarMinus_gen =  hEmpty->GetBinCenter( hEmpty->FindBin( asymVarMinus_gen, obs2D_gen ) );
+				  asymVarMinus =  hEmpty->GetXaxis()->GetBinCenter( hEmpty->FindBin( asymVarMinus, obs2D ) );
+				  asymVarMinus_gen =  hEmpty->GetXaxis()->GetBinCenter( hEmpty->FindBin( asymVarMinus_gen, obs2D_gen ) );
                 }
             }
 
@@ -374,7 +374,7 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
 				genbin  = getUnwrappedBin(hTrue_before, asymVarMinus_gen, obs2D_gen);
 
 				fillUnderOverFlow(hMeas_before, asymVarMinus, obs2D, weight, Nsolns);
-				fillUnderOverFlow(hTrue_before, asymVarMinus_gen, obs2D, weight, Nsolns);
+				fillUnderOverFlow(hTrue_before, asymVarMinus_gen, obs2D_gen, weight, Nsolns);
 				fillUnderOverFlow(hTrue_vs_Meas, measbin, genbin, weight, Nsolns);
               }
 			  //if (TestType == "Linearity") weight = weight * fx_scaled->Eval(asymVar_gen); //this is very slow for some reason
@@ -386,11 +386,11 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
 				//if (TestType == "Linearity") weight = orig_weight * fx_scaled->Eval(asymVarMinus_gen); //this is very slow for some reason
 				if (TestType == "Linearity") weight = orig_weight * (1.0 + slope * xminussign * ( fx->Eval(fabs(xminusval)) ) );
 				fillUnderOverFlow(hMeas_after, asymVarMinus, obs2D, weight, Nsolns);
-				fillUnderOverFlow(hTrue_after, asymVarMinus_gen, obs2D, weight, Nsolns);
+				fillUnderOverFlow(hTrue_after, asymVarMinus_gen, obs2D_gen, weight, Nsolns);
               }
             }
 
-        }
+        } // end of loop over entries
 
 		////////////////////////////////////////////////////////////////////////////////////////////
 		/////////////////// 3. Begin testing ///////////////////////////////////////////////////////
