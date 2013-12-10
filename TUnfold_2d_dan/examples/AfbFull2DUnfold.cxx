@@ -1,9 +1,11 @@
 #include <iostream>
 #include <fstream>
+#include <cmath>
 #include "AfbFinalUnfold.h"
 
 #include "TRandom3.h"
 #include "TH1D.h"
+#include "TH2D.h"
 #include "TStyle.h"
 #include "TFile.h"
 #include "TTree.h"
@@ -360,14 +362,23 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         }
         else if (unfoldingType == 2)
         {
-		  TUnfold unfold_TUnfold (hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone);  //need to set mode "None" here if regularizing by hand
-            unfold_TUnfold.SetInput(hData_bkgSub);
-            //Double_t biasScale=1.0;
-            unfold_TUnfold.SetBias(hTrue_unwrapped);
-			unfold_TUnfold.RegularizeBins2D(1,1,nbinsx2D,nbinsx2D,nbinsy2D,TUnfold::kRegModeCurvature);
-            unfold_TUnfold.DoUnfold(tau,hData_bkgSub, 0.0);
-            unfold_TUnfold.GetOutput(hData_unfolded_unwrapped);
+		  /*TUnfold unfold_TUnfold (hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone);  //need to set mode "None" here if regularizing by hand
+		  unfold_TUnfold.SetInput(hData_bkgSub);
+		  //Double_t biasScale=1.0;
+		  unfold_TUnfold.SetBias(hTrue_unwrapped);
+		  unfold_TUnfold.RegularizeBins2D(1,1,nbinsx2D,nbinsx2D,nbinsy2D,TUnfold::kRegModeCurvature);
+		  unfold_TUnfold.DoUnfold(tau,hData_bkgSub, 0.0);
+		  unfold_TUnfold.GetOutput(hData_unfolded_unwrapped);*/
 
+		  TUnfoldSys unfold_TUnfold (hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone);  //need to set mode "None" here if regularizing by hand
+		  unfold_TUnfold.SetInput(hData_bkgSub);
+		  //Double_t biasScale=1.0;
+		  unfold_TUnfold.SetBias(hTrue_unwrapped);
+		  unfold_TUnfold.RegularizeBins2D(1,1,nbinsx2D,nbinsx2D,nbinsy2D,TUnfold::kRegModeCurvature);
+		  //unfold_TUnfold.DoUnfold(tau,hData_bkgSub, 0.0);
+		  minimizeRhoAverage(&unfold_TUnfold, hData_bkgSub, 100, -4.0, 0.0);
+		  unfold_TUnfold.GetOutput(hData_unfolded_unwrapped);
+		  tau = unfold_TUnfold.GetTau();
 
             TH2D *ematrix = unfold_TUnfold.GetEmatrix("ematrix", "error matrix", 0, 0);
             for (Int_t cmi = 0; cmi < nbinsunwrapped; cmi++)
@@ -381,7 +392,37 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         else cout << "Unfolding TYPE not Specified" << "\n";
 
 
-	   
+		// Generate a curve of rhoAvg vs log(tau)
+		double ar_logtau[100];
+		double ar_rhoAvg[100];
+		double logtau_dan = 0.0;
+		double bestlogtau = log10(tau);
+		double bestrhoavg = unfold_TUnfold.GetRhoAvg();
+
+		TUnfoldSys unfold_getRhoAvg(hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone);
+		unfold_getRhoAvg.SetInput(hData_bkgSub);
+		unfold_getRhoAvg.SetBias(hTrue_unwrapped);
+		unfold_getRhoAvg.RegularizeBins2D(1,1,nbinsx2D,nbinsx2D,nbinsy2D,TUnfold::kRegModeCurvature);
+
+		for(int l=0; l<100; l++) {
+		  logtau_dan = -4.0 + 0.04*l;
+		  unfold_getRhoAvg.DoUnfold(pow(10.0,logtau_dan), hData_bkgSub, 0.0);
+		  ar_logtau[l] = logtau_dan;
+		  ar_rhoAvg[l] = unfold_getRhoAvg.GetRhoAvg();
+		}
+
+		TGraph* gr_rhoAvg = new TGraph(100,ar_logtau,ar_rhoAvg);
+		TCanvas* c_rhoAvg = new TCanvas("c_rhoAvg","c_rhoAvg");
+		gr_rhoAvg->SetTitle("Global Correlation Coefficient;log_{10} #tau;#rho_{avg}");
+		gr_rhoAvg->SetLineColor(kRed);
+		gr_rhoAvg->Draw("al");
+
+		TMarker* m_rhoMin = new TMarker(bestlogtau,bestrhoavg,kCircle);
+		m_rhoMin->Draw();
+		c_rhoAvg->SaveAs("minimizeRho_" + acceptanceName + ".eps");
+		
+
+	  
 		//Re-wrap 1D histogram into 2D
 		rewrap1dhisto(hData_unfolded_unwrapped, hData_unfolded);
 		rewrap1dhisto(hData_bkgSub, hData_bkgSub_rewrapped);
@@ -552,6 +593,9 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         // ============== Print the asymmetry =============================
 		cout << "========= Variable: " << acceptanceName << "===================\n";
         Float_t Afb, AfbErr;
+
+		cout << "Automatic tau = " << tau << endl;
+		cout << "Minimum rhoAvg = " << bestrhoavg << endl;
 
         GetAfb(hData, Afb, AfbErr);
         cout << " Data: " << Afb << " +/-  " << AfbErr << "\n";

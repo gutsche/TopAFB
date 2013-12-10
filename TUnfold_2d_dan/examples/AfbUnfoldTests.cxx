@@ -31,8 +31,8 @@ TString Region = "";
 
 
 Int_t kterm = 3;
-Double_t tau = 0.005;
-Int_t nPseudos = 10000;   // Set to 1 to speed up test runs. Previously set to 10k
+Double_t tau = 0.003;
+Int_t nPseudos = 10000;   // Set to 1 to speed up test runs. Normally set to 10k
 Int_t includeSys = 0;
 
 Int_t lineWidth = 5;

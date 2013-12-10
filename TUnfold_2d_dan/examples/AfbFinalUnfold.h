@@ -378,7 +378,7 @@ void GetCorrectedAfb2d(TH2D* histogram, TMatrixD &covarianceM, vector<double> &m
     second_output_file << acceptanceName << " " << observablename << " AFB" << j << ": " << afb[j] << " +/- " << afberr[j] << endl; 
 
   }
-  
+
 }
 
 
@@ -1000,7 +1000,7 @@ syst_corr[2] =  0.007788  ; stat_corr[2] =  0.022922  ; stat_uncorr[2] =  0.0156
       asymlabel="A_{#Delta#phi}";
       Double_t pi = 3.141592653589793;
       xbins2D[0]=0.0; xbins2D[1]=4.*pi/20.; xbins2D[2]=7.*pi/20.; xbins2D[3]=10.*pi/20.; xbins2D[4]=13.*pi/20.; xbins2D[5]=16.*pi/20.; xbins2D[6]=pi;
-      ybins2D=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
+      ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1499,4 +1499,45 @@ void rewrap1dhisto(TH1* h1, TH2* h2)
   }
   h1->Sumw2();
 
+}
+
+
+// The following is also copied from the KIT group code
+double scaleBias;
+TUnfoldSys* myUnfold_TUnfoldGlobalPointerForTMinuit;
+TH1D* myUnfold_hdataGlobalPointerForTMinuit;
+
+void myUnfold_globalFunctionForMinuit(int &npar, double *gin, double &f, double *par, int iflag)
+{
+  const double logtau = par[0];
+  const double scaleBias = par[1];
+  myUnfold_TUnfoldGlobalPointerForTMinuit->DoUnfold(pow(10, logtau), myUnfold_hdataGlobalPointerForTMinuit, scaleBias);
+  
+  f = fabs(myUnfold_TUnfoldGlobalPointerForTMinuit->GetRhoAvg());
+}
+
+
+
+void minimizeRhoAverage(TUnfoldSys* unfold, TH1D* hdata, int nsteps, double log10min, double log10max)
+{
+  myUnfold_TUnfoldGlobalPointerForTMinuit = unfold;
+  myUnfold_hdataGlobalPointerForTMinuit = hdata;
+  
+  // Instantiate Minuit for 2 parameters
+  TMinuit minuit(2);
+  minuit.SetFCN(myUnfold_globalFunctionForMinuit);
+  minuit.SetPrintLevel(-1); // -1 no output, 1 output
+  
+  minuit.DefineParameter(0, "logtau", (log10min+log10max)/2, 1, log10min, log10max);
+  minuit.DefineParameter(1, "scaleBias", scaleBias, 0, scaleBias, scaleBias);
+  minuit.FixParameter(1);
+  
+  minuit.SetMaxIterations(100);
+  minuit.Migrad();
+  
+  double bestlogtau = -1000;
+  double bestlogtau_err = -1000; // error is meaningless because we don't have a likelihood, but method expects it
+  minuit.GetParameter(0, bestlogtau, bestlogtau_err);
+  unfold->DoUnfold(pow(10, bestlogtau), hdata, scaleBias); 
+  
 }
