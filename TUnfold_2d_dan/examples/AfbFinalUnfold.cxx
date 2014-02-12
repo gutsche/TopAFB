@@ -36,7 +36,7 @@ using std::endl;
 //==============================================================================
 
 // 0=SVD, 1=TUnfold via RooUnfold, 2=TUnfold
-int unfoldingType = 0;
+int unfoldingType = 2;
 
 TString Region = "";
 Int_t kterm = 3; //for SVD
@@ -64,7 +64,7 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
 
     ofstream myfile;
     myfile.open (summary_name + ".txt");
-    cout.rdbuf(myfile.rdbuf());
+    //cout.rdbuf(myfile.rdbuf());
 
     // OGU 130516: add second output txt file with format easier to be pasted into google docs
     ofstream second_output_file;
@@ -364,7 +364,7 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
         leg0->AddEntry(hMeas,  "MC@NLO reco level", "F");
         leg0->AddEntry(hBkg,  "Background", "F");
         leg0->Draw();
-        c_reco->SaveAs("Reco_" + acceptanceName + Region + ".pdf");
+        // c_reco->SaveAs("Reco_" + acceptanceName + Region + ".pdf");
 
 
         if (unfoldingType == 0)
@@ -386,14 +386,13 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
         }
         else if (unfoldingType == 2)
         {
-            TUnfold unfold_TUnfold (hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeCurvature);
+            TUnfoldSys unfold_TUnfold (hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeCurvature);
             //TUnfold unfold_TUnfold (hTrue_vs_Meas, TUnfold::kHistMapOutputVert);
             unfold_TUnfold.SetInput(hData_bkgSub);
             //unfold_TUnfold.SetBias(hTrue);  //doesn't make any difference, because if not set the bias distribution is automatically determined from hTrue_vs_Meas, which gives exactly hTrue
 
             if (doScanLCurve)
             {
-
                 Int_t nScan = 3000;
                 Int_t iBest;
                 TSpline *logTauX, *logTauY;
@@ -423,9 +422,11 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
                     tau = 0.005;
                     cout << "setting tau to 0.005" << endl;
                 }
-
             }
 
+
+			minimizeRhoAverage(&unfold_TUnfold, hData_bkgSub, 100, -5.0, 0.0);
+			tau = unfold_TUnfold.GetTau();
 
             //biasScale = 0.0; //set biasScale to 0 when using kRegModeSize, or to compare with unfoldingType == 1
             //do the unfolding with calculated bias scale (N_data/N_MC), and tau from ScanLcurve if doScanLCurve=true. Note that the results will only be the same as unfoldingType == 1 with biasScale=0 and the same value of tau.
@@ -452,6 +453,37 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
         }
         else cout << "Unfolding TYPE not Specified" << "\n";
 
+
+		// Generate a curve of rhoAvg vs log(tau)
+		double ar_logtau[100];
+		double ar_rhoAvg[100];
+		double logtau_dan = 0.0;
+		double bestlogtau = log10(tau);
+		double bestrhoavg = unfold_TUnfold.GetRhoAvg();
+
+		TUnfold unfold_getRhoAvg(hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeCurvature);
+		unfold_getRhoAvg.SetInput(hData_bkgSub);
+		unfold_getRhoAvg.SetBias(hTrue);
+		//unfold_getRhoAvg.RegularizeBins2D(1,1,nbinsx2D,nbinsx2D,nbinsy2D,TUnfold::kRegModeCurvature);
+
+		for(int l=0; l<100; l++) {
+		  logtau_dan = -5.0 + 0.05*l;
+		  unfold_getRhoAvg.DoUnfold(pow(10.0,logtau_dan), hData_bkgSub, 0.0);
+		  ar_logtau[l] = logtau_dan;
+		  ar_rhoAvg[l] = unfold_getRhoAvg.GetRhoAvg();
+		}
+
+		TGraph* gr_rhoAvg = new TGraph(100,ar_logtau,ar_rhoAvg);
+		TCanvas* c_rhoAvg = new TCanvas("c_rhoAvg","c_rhoAvg");
+		gr_rhoAvg->SetTitle("Global Correlation Coefficient;log_{10} #tau;#rho_{avg}");
+		gr_rhoAvg->SetLineColor(kRed);
+		gr_rhoAvg->Draw("al");
+
+		TMarker* m_rhoMin = new TMarker(bestlogtau,bestrhoavg,kCircle);
+		m_rhoMin->Draw();
+		c_rhoAvg->SaveAs("1D_minimizeRho_" + acceptanceName + ".eps");
+
+
         //m_unfoldE.Print("f=%1.5g ");
         //m_unfoldcorr.Print("f=%1.5g ");
 
@@ -464,6 +496,7 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
             c_d->SaveAs("D_" + acceptanceName + Region + ".pdf");
         }
 
+		/*
         TCanvas *c_resp = new TCanvas("c_resp", "c_resp");
         TH2D *hResp = (TH2D *) response.Hresponse();
         gStyle->SetPalette(1);
@@ -473,6 +506,7 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
         c_resp->SaveAs("Response_" + acceptanceName + Region + ".pdf");
         c_resp->SaveAs("Response_" + acceptanceName + Region + ".C");
         c_resp->SaveAs("Response_" + acceptanceName + Region + ".root");
+		*/
 
         TFile *file = new TFile("../acceptance/mcnlo/accept_" + acceptanceName + ".root");
         TH1D *acceptM = (TH1D *) file->Get("accept_" + acceptanceName);
@@ -590,6 +624,9 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
         //==================================================================
         // ============== Print the assymetry =============================
         cout << "========= Variable: " << acceptanceName << "===================\n";
+
+		cout << "Automated tau value: " << tau << endl;
+		cout << "Minimum rhoAverage: " << bestrhoavg << endl;
 
         Float_t Afb, AfbErr;
 
@@ -783,9 +820,11 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
         blah->SetTextAlign(11);
         pt1->Draw();
 
+		/*
         c_test->SaveAs("finalplot_unfolded_" + acceptanceName + Region + ".pdf");
         c_test->SaveAs("finalplot_unfolded_" + acceptanceName + Region + ".C");
         c_test->SaveAs("finalplot_unfolded_" + acceptanceName + Region + ".root");
+		*/
 
         ch_data->Delete();
 
