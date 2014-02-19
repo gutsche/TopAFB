@@ -18,15 +18,18 @@ float xmax1D= 1.0;
 float xmin=-1.0;
 float xmax= 1.0;
 float ymin=-1.0;
-float ymax=-1.0;
+float ymax= 1.0;
 
 const int nbins1D=6;
-const int nbinsx2D=6;
+const int nbinsx2D=6; //Normal configuration: use 6 bins in x, before and after unfolding.
+const int nbinsx2Dalt = 12; //Alternate configuration: use 12 bins in x before unfolding, and 6 bins after.
 const int nbinsy2D=3;
 const int nbinsunwrapped = nbinsx2D*nbinsy2D;
+const int nbinsunwrappedalt = nbinsx2Dalt*nbinsy2D;
 
 double xbins1D[nbins1D+1];
 double xbins2D[nbinsx2D+1];
+double xbins2Dalt[nbinsx2Dalt+1];
 double ybins2D[nbinsy2D+1];
 
 
@@ -562,6 +565,8 @@ void Initialize1DBinning(int iVar){
       acceptanceName="lepChargeAsym";
       asymlabel="A_{lepC}";
       xbins1D[0]=-2.0; xbins1D[1]=-0.8; xbins1D[2]=-0.4; xbins1D[3]=0.0; xbins1D[4]=0.4; xbins1D[5]=0.8; xbins1D[6]=2.0;
+      xbins2Dalt[0]=-2.0; xbins2Dalt[2]=-0.8; xbins2Dalt[4]=-0.4; xbins2Dalt[6]=0.0; xbins2Dalt[8]=0.4; xbins2Dalt[10]=0.8; xbins2Dalt[12]=2.0;
+      xbins2Dalt[1]=-1.4; xbins2Dalt[3]=-0.6; xbins2Dalt[5]=-0.2; xbins2Dalt[7]=0.2; xbins2Dalt[9]=0.6; xbins2Dalt[11]=1.4;
 syst_corr[0] =  0.002297  ; stat_corr[0] =  0.005120  ; stat_uncorr[0] =  0.003483  ;
 syst_corr[1] =  0.002641  ; stat_corr[1] =  0.006879  ; stat_uncorr[1] =  0.004675  ;
 syst_corr[2] =  0.004607  ; stat_corr[2] =  0.007338  ; stat_uncorr[2] =  0.005284  ;
@@ -581,6 +586,8 @@ syst_corr[5] =  0.002847  ; stat_corr[5] =  0.004806  ; stat_uncorr[5] =  0.0035
       asymlabel="A_{#Delta#phi}";
       Double_t pi = 3.141592653589793;
       xbins1D[0]=0.0; xbins1D[1]=4.*pi/20.; xbins1D[2]=7.*pi/20.; xbins1D[3]=10.*pi/20.; xbins1D[4]=13.*pi/20.; xbins1D[5]=16.*pi/20.; xbins1D[6]=pi;
+      xbins2Dalt[0]=0.0; xbins2Dalt[2]=4.*pi/20.; xbins2Dalt[4]=7.*pi/20.; xbins2Dalt[6]=10.*pi/20.; xbins2Dalt[8]=13.*pi/20.; xbins2Dalt[10]=16.*pi/20.; xbins2Dalt[12]=pi;
+      xbins2Dalt[1]=2.*pi/20.; xbins2Dalt[3]=5.5*pi/20.; xbins2Dalt[5]=8.5*pi/20.; xbins2Dalt[7]=11.5*pi/20.; xbins2Dalt[9]=14.5*pi/20.; xbins2Dalt[11]=18.*pi/20.;
 syst_corr[0] =  0.006053  ; stat_corr[0] =  0.007795  ; stat_uncorr[0] =  0.005697  ;
 syst_corr[1] =  0.005288  ; stat_corr[1] =  0.006603  ; stat_uncorr[1] =  0.004705  ;
 syst_corr[2] =  0.006699  ; stat_corr[2] =  0.006543  ; stat_uncorr[2] =  0.004353  ;
@@ -754,6 +761,8 @@ syst_corr[5] =  0.016122  ; stat_corr[5] =  0.032788  ; stat_uncorr[5] =  0.0245
 
 void Initialize2DBinning(int iVar){
 
+  ybins2D[0]=0.0; ybins2D[1]=430; ybins2D[2]=530.0; ybins2D[3]=800.0;  // KIT binning
+  //ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;   // SnT binning
 
   switch (iVar)
   {
@@ -766,11 +775,13 @@ void Initialize2DBinning(int iVar){
       acceptanceName="lepChargeAsym";
       asymlabel="A_{lepC}";
       xbins2D[0]=-2.0; xbins2D[1]=-0.8; xbins2D[2]=-0.4; xbins2D[3]=0.0; xbins2D[4]=0.4; xbins2D[5]=0.8; xbins2D[6]=2.0;
-      ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
+      xbins2Dalt[0]=-2.0; xbins2Dalt[2]=-0.8; xbins2Dalt[4]=-0.4; xbins2Dalt[6]=0.0; xbins2Dalt[8]=0.4; xbins2Dalt[10]=0.8; xbins2Dalt[12]=2.0;
+      xbins2Dalt[1]=-1.4; xbins2Dalt[3]=-0.6; xbins2Dalt[5]=-0.2; xbins2Dalt[7]=0.2; xbins2Dalt[9]=0.6; xbins2Dalt[11]=1.4;
+      //ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
-      xmin=xbins2D[0];
-      xmax=xbins2D[6];
+      xmin=xbins2Dalt[0];
+      xmax=xbins2Dalt[12];
 syst_corr[0] =  0.016998  ; stat_corr[0] =  0.022320  ; stat_uncorr[0] =  0.017124  ;
 syst_corr[1] =  0.006644  ; stat_corr[1] =  0.016393  ; stat_uncorr[1] =  0.011733  ;
 syst_corr[2] =  0.008050  ; stat_corr[2] =  0.024319  ; stat_uncorr[2] =  0.016565  ;
@@ -786,11 +797,13 @@ syst_corr[2] =  0.008050  ; stat_corr[2] =  0.024319  ; stat_uncorr[2] =  0.0165
       asymlabel="A_{#Delta#phi}";
       Double_t pi = 3.141592653589793;
       xbins2D[0]=0.0; xbins2D[1]=4.*pi/20.; xbins2D[2]=7.*pi/20.; xbins2D[3]=10.*pi/20.; xbins2D[4]=13.*pi/20.; xbins2D[5]=16.*pi/20.; xbins2D[6]=pi;
-      ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
+      xbins2Dalt[0]=0.0; xbins2Dalt[2]=4.*pi/20.; xbins2Dalt[4]=7.*pi/20.; xbins2Dalt[6]=10.*pi/20.; xbins2Dalt[8]=13.*pi/20.; xbins2Dalt[10]=16.*pi/20.; xbins2Dalt[12]=pi;
+      xbins2Dalt[1]=2.*pi/20.; xbins2Dalt[3]=5.5*pi/20.; xbins2Dalt[5]=8.5*pi/20.; xbins2Dalt[7]=11.5*pi/20.; xbins2Dalt[9]=14.5*pi/20.; xbins2Dalt[11]=18.*pi/20.;
+      //ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
-      xmin=xbins2D[0];
-      xmax=xbins2D[6];
+      xmin=xbins2Dalt[0];
+      xmax=xbins2Dalt[12];
 syst_corr[0] =  0.021257  ; stat_corr[0] =  0.024925  ; stat_uncorr[0] =  0.016828  ;
 syst_corr[1] =  0.019863  ; stat_corr[1] =  0.018320  ; stat_uncorr[1] =  0.012061  ;
 syst_corr[2] =  0.020331  ; stat_corr[2] =  0.022368  ; stat_uncorr[2] =  0.015599  ;
@@ -805,7 +818,7 @@ syst_corr[2] =  0.020331  ; stat_corr[2] =  0.022368  ; stat_uncorr[2] =  0.0155
       acceptanceName="lepPlusCosTheta";
       asymlabel="A_{P+}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.6; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.6; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
+      //ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -824,7 +837,7 @@ syst_corr[2] =  0.042369  ; stat_corr[2] =  0.033700  ; stat_uncorr[2] =  0.0237
       acceptanceName="lepMinusCosTheta";
       asymlabel="A_{P-}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.6; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.6; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
+      //ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -843,7 +856,7 @@ syst_corr[2] =  0.032852  ; stat_corr[2] =  0.033270  ; stat_uncorr[2] =  0.0239
       acceptanceName="lepCosTheta";
       asymlabel="A_{P}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.6; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.6; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
+      //ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -862,7 +875,7 @@ syst_corr[2] =  0.036177  ; stat_corr[2] =  0.023908  ; stat_uncorr[2] =  0.0168
       acceptanceName="topSpinCorr";
       asymlabel="A_{c1c2}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.5; xbins2D[2]=-0.2; xbins2D[3]=0.0; xbins2D[4]=0.2; xbins2D[5]=0.5; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
+      //ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -882,7 +895,7 @@ syst_corr[2] =  0.034279  ; stat_corr[2] =  0.048239  ; stat_uncorr[2] =  0.0340
       acceptanceName="rapiditydiffMarco";
       asymlabel="A_{C}";
       xbins2D[0]=-2.0; xbins2D[1]=-0.7; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.7; xbins2D[6]=2.0;
-      ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
+      //ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -901,7 +914,7 @@ syst_corr[2] =  0.009106  ; stat_corr[2] =  0.030456  ; stat_uncorr[2] =  0.0234
       acceptanceName="topCosTheta";
       asymlabel="A_{FB}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.7; xbins2D[2]=-0.4; xbins2D[3]=0.0; xbins2D[4]=0.4; xbins2D[5]=0.7; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
+      //ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -920,7 +933,7 @@ syst_corr[2] =  0.009654  ; stat_corr[2] =  0.033674  ; stat_uncorr[2] =  0.0237
       acceptanceName="lepAzimAsym";
       asymlabel="A_{#Delta#phi}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.8; xbins2D[2]=-0.4; xbins2D[3]=0.0; xbins2D[4]=0.4; xbins2D[5]=0.8; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
+      //ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -936,7 +949,7 @@ syst_corr[2] =  0.009654  ; stat_corr[2] =  0.033674  ; stat_uncorr[2] =  0.0237
       acceptanceName="pseudorapiditydiff";
       asymlabel="A_{C}";
       xbins2D[0]=-2.0; xbins2D[1]=-1.0; xbins2D[2]=-0.5; xbins2D[3]=0.0; xbins2D[4]=0.5; xbins2D[5]=1.0; xbins2D[6]=2.0;
-      ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
+      //ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -952,7 +965,7 @@ syst_corr[2] =  0.009654  ; stat_corr[2] =  0.033674  ; stat_uncorr[2] =  0.0237
       acceptanceName="rapiditydiff";
       asymlabel="A_{C}";
       xbins2D[0]=-2.0; xbins2D[1]=-0.8; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.8; xbins2D[6]=2.0;
-      ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
+      //ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -968,6 +981,7 @@ syst_corr[2] =  0.009654  ; stat_corr[2] =  0.033674  ; stat_uncorr[2] =  0.0237
 
 void Initialize2DBinningttpt(int iVar){
 
+  ybins2D[0]=0.0; ybins2D[1]=41.0; ybins2D[2]=92.0; ybins2D[3]=150.0;
 
   switch (iVar)
   {
@@ -980,7 +994,7 @@ void Initialize2DBinningttpt(int iVar){
       acceptanceName="lepChargeAsym";
       asymlabel="A_{lepC}";
       xbins2D[0]=-2.0; xbins2D[1]=-0.8; xbins2D[2]=-0.4; xbins2D[3]=0.0; xbins2D[4]=0.4; xbins2D[5]=0.8; xbins2D[6]=2.0;
-      ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
+      //ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1000,7 +1014,7 @@ syst_corr[2] =  0.007788  ; stat_corr[2] =  0.022922  ; stat_uncorr[2] =  0.0156
       asymlabel="A_{#Delta#phi}";
       Double_t pi = 3.141592653589793;
       xbins2D[0]=0.0; xbins2D[1]=4.*pi/20.; xbins2D[2]=7.*pi/20.; xbins2D[3]=10.*pi/20.; xbins2D[4]=13.*pi/20.; xbins2D[5]=16.*pi/20.; xbins2D[6]=pi;
-      ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
+      //ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1019,7 +1033,7 @@ syst_corr[2] =  0.021710  ; stat_corr[2] =  0.024488  ; stat_uncorr[2] =  0.0154
       acceptanceName="lepPlusCosTheta";
       asymlabel="A_{P+}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.6; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.6; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
+      //ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1038,7 +1052,7 @@ syst_corr[2] =  0.029761  ; stat_corr[2] =  0.033696  ; stat_uncorr[2] =  0.0257
       acceptanceName="lepMinusCosTheta";
       asymlabel="A_{P-}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.6; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.6; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
+      //ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1057,7 +1071,7 @@ syst_corr[2] =  0.025551  ; stat_corr[2] =  0.036391  ; stat_uncorr[2] =  0.0258
       acceptanceName="lepCosTheta";
       asymlabel="A_{P}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.6; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.6; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
+      //ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1076,7 +1090,7 @@ syst_corr[2] =  0.023435  ; stat_corr[2] =  0.024692  ; stat_uncorr[2] =  0.0182
       acceptanceName="topSpinCorr";
       asymlabel="A_{c1c2}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.5; xbins2D[2]=-0.2; xbins2D[3]=0.0; xbins2D[4]=0.2; xbins2D[5]=0.5; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
+      //ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1096,7 +1110,7 @@ syst_corr[2] =  0.029763  ; stat_corr[2] =  0.048965  ; stat_uncorr[2] =  0.0368
       acceptanceName="rapiditydiffMarco";
       asymlabel="A_{C}";
       xbins2D[0]=-2.0; xbins2D[1]=-0.7; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.7; xbins2D[6]=2.0;
-      ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
+      //ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1115,7 +1129,7 @@ syst_corr[2] =  0.007963  ; stat_corr[2] =  0.035538  ; stat_uncorr[2] =  0.0266
       acceptanceName="topCosTheta";
       asymlabel="A_{FB}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.7; xbins2D[2]=-0.4; xbins2D[3]=0.0; xbins2D[4]=0.4; xbins2D[5]=0.7; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
+      //ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1134,7 +1148,7 @@ syst_corr[2] =  0.012402  ; stat_corr[2] =  0.037342  ; stat_uncorr[2] =  0.0268
       acceptanceName="lepAzimAsym";
       asymlabel="A_{#Delta#phi}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.8; xbins2D[2]=-0.4; xbins2D[3]=0.0; xbins2D[4]=0.4; xbins2D[5]=0.8; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
+      //ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1150,7 +1164,7 @@ syst_corr[2] =  0.012402  ; stat_corr[2] =  0.037342  ; stat_uncorr[2] =  0.0268
       acceptanceName="pseudorapiditydiff";
       asymlabel="A_{C}";
       xbins2D[0]=-2.0; xbins2D[1]=-1.0; xbins2D[2]=-0.5; xbins2D[3]=0.0; xbins2D[4]=0.5; xbins2D[5]=1.0; xbins2D[6]=2.0;
-      ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
+      //ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1166,7 +1180,7 @@ syst_corr[2] =  0.012402  ; stat_corr[2] =  0.037342  ; stat_uncorr[2] =  0.0268
       acceptanceName="rapiditydiff";
       asymlabel="A_{C}";
       xbins2D[0]=-2.0; xbins2D[1]=-0.8; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.8; xbins2D[6]=2.0;
-      ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
+      //ybins2D[0]=0.0; ybins2D[1]=24; ybins2D[2]=52.0; ybins2D[3]=100.0;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1182,6 +1196,7 @@ syst_corr[2] =  0.012402  ; stat_corr[2] =  0.037342  ; stat_uncorr[2] =  0.0268
 
 void Initialize2DBinningttrapidity2(int iVar){
 
+  ybins2D[0]=0.0; ybins2D[1]=0.34; ybins2D[2]=0.75; ybins2D[3]=1.5;
 
   switch (iVar)
   {
@@ -1194,7 +1209,7 @@ void Initialize2DBinningttrapidity2(int iVar){
       acceptanceName="lepChargeAsym";
       asymlabel="A_{lepC}";
       xbins2D[0]=-2.0; xbins2D[1]=-0.8; xbins2D[2]=-0.4; xbins2D[3]=0.0; xbins2D[4]=0.4; xbins2D[5]=0.8; xbins2D[6]=2.0;
-      ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
+      //ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1233,7 +1248,7 @@ syst_corr[2] =  0.019025  ; stat_corr[2] =  0.019016  ; stat_uncorr[2] =  0.0150
       acceptanceName="lepPlusCosTheta";
       asymlabel="A_{P+}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.6; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.6; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
+      //ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1252,7 +1267,7 @@ syst_corr[2] =  0.032040  ; stat_corr[2] =  0.033993  ; stat_uncorr[2] =  0.0254
       acceptanceName="lepMinusCosTheta";
       asymlabel="A_{P-}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.6; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.6; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
+      //ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1271,7 +1286,7 @@ syst_corr[2] =  0.027232  ; stat_corr[2] =  0.036324  ; stat_uncorr[2] =  0.0256
       acceptanceName="lepCosTheta";
       asymlabel="A_{P}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.6; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.6; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
+      //ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1290,7 +1305,7 @@ syst_corr[2] =  0.028068  ; stat_corr[2] =  0.024181  ; stat_uncorr[2] =  0.0180
       acceptanceName="topSpinCorr";
       asymlabel="A_{c1c2}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.5; xbins2D[2]=-0.2; xbins2D[3]=0.0; xbins2D[4]=0.2; xbins2D[5]=0.5; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
+      //ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1310,7 +1325,7 @@ syst_corr[2] =  0.034283  ; stat_corr[2] =  0.046582  ; stat_uncorr[2] =  0.0365
       acceptanceName="rapiditydiffMarco";
       asymlabel="A_{C}";
       xbins2D[0]=-2.0; xbins2D[1]=-0.7; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.7; xbins2D[6]=2.0;
-      ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
+      //ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1329,7 +1344,7 @@ syst_corr[2] =  0.010941  ; stat_corr[2] =  0.032998  ; stat_uncorr[2] =  0.0248
       acceptanceName="topCosTheta";
       asymlabel="A_{FB}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.7; xbins2D[2]=-0.4; xbins2D[3]=0.0; xbins2D[4]=0.4; xbins2D[5]=0.7; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
+      //ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1348,7 +1363,7 @@ syst_corr[2] =  0.013820  ; stat_corr[2] =  0.036253  ; stat_uncorr[2] =  0.0252
       acceptanceName="lepAzimAsym";
       asymlabel="A_{#Delta#phi}";
       xbins2D[0]=-1.0; xbins2D[1]=-0.8; xbins2D[2]=-0.4; xbins2D[3]=0.0; xbins2D[4]=0.4; xbins2D[5]=0.8; xbins2D[6]=1.0;
-      ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
+      //ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1364,7 +1379,7 @@ syst_corr[2] =  0.013820  ; stat_corr[2] =  0.036253  ; stat_uncorr[2] =  0.0252
       acceptanceName="pseudorapiditydiff";
       asymlabel="A_{C}";
       xbins2D[0]=-2.0; xbins2D[1]=-1.0; xbins2D[2]=-0.5; xbins2D[3]=0.0; xbins2D[4]=0.5; xbins2D[5]=1.0; xbins2D[6]=2.0;
-      ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
+      //ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];
@@ -1380,7 +1395,7 @@ syst_corr[2] =  0.013820  ; stat_corr[2] =  0.036253  ; stat_uncorr[2] =  0.0252
       acceptanceName="rapiditydiff";
       asymlabel="A_{C}";
       xbins2D[0]=-2.0; xbins2D[1]=-0.8; xbins2D[2]=-0.3; xbins2D[3]=0.0; xbins2D[4]=0.3; xbins2D[5]=0.8; xbins2D[6]=2.0;
-      ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
+      //ybins2D[0]=0.0; ybins2D[1]=0.3; ybins2D[2]=0.7; ybins2D[3]=1.5;
       ymin=ybins2D[0];
       ymax=ybins2D[3];
       xmin=xbins2D[0];

@@ -71,7 +71,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 
     ofstream myfile;
     myfile.open (summary_name + ".txt");
-    //cout.rdbuf(myfile.rdbuf());
+    cout.rdbuf(myfile.rdbuf());
 
     // OGU 130516: add second output txt file with format easier to be pasted into google docs
     ofstream second_output_file;
@@ -104,28 +104,86 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         else if (Var2D == "ttpt") Initialize2DBinningttpt(iVar);
         bool combineLepMinus = acceptanceName == "lepCosTheta" ? true : false;
 
+		
+		//Decide here, at runtime, whether we're using the alternate 12 x-bin configuration or the usual 6 x-bin.
+		if(iVar==0 || iVar==1) {
+		  const int nbinsxpre = nbinsx2Dalt;
+		  const int nbinsunwrappedpre = nbinsunwrappedalt;
+		  double xbinspre[nbinsxpre];
+		  for(int i=0;i<nbinsxpre+1;i++) xbinspre[i] = xbins2Dalt[i];
+		}
+		else {
+		  const int nbinsxpre = nbinsx2D;
+		  const int nbinsunwrappedpre = nbinsunwrapped;
+		  double xbinspre[nbinsxpre];
+		  for(int i=0;i<nbinsxpre+1;i++) xbinspre[i] = xbins2D[i];
+		}
+		
+		/*
+		//Do all our bin splitting
+		int nbinsx_gen = -99;
+		int nbinsx_reco = -99;
+		int nbinsunwrapped_gen = -99;
+		int nbinsunwrapped_reco = -99;
+
+		if( iVar < 2 ) nbinsx_gen = nbinsx2D*2;
+		else nbinsx_gen = nbinsx2D;
+
+		nbinsx_reco = nbinsx_gen*2;
+
+		double* genbins;
+		double* recobins;
+
+		genbins = new double[nbinsx_gen+1];
+		recobins = new double[nbinsx_reco+1];
+
+		for( int i=0; i<nbinsx2D; i++ ) {
+		  if( iVar<2 ) {
+			genbins[i*2] = xbins2D[i];
+			genbins[i*2 +1] = ( xbins2D[i] + xbins2D[i+1] )/2.;
+		  }
+		  else genbins[i] = xbins2D[i];
+		}
+
+		genbins[nbinsx_gen] = xbins2D[nbinsx2D];
+
+		for( int i=0; i<nbinsx_gen; i++ ) {
+		  recobins[i*2] = genbins[i];
+		  recobins[i*2 +1] = ( genbins[i] + genbins[i+1] )/2.;
+		}
+
+		recobins[nbinsx_reco] = genbins[nbinsx_gen];
+
+		nbinsunwrapped_gen  = nbinsx_gen  * nbinsy2D;
+		nbinsunwrapped_reco = nbinsx_reco * nbinsy2D;
+		*/
+		//Make histograms
+
 		//Use proper 2D histograms, instead of the old 1D ones
-        TH2D *hData = new TH2D ("Data_BkgSub", "Data with background subtracted",    nbinsx2D, xbins2D, nbinsy2D, ybins2D);
-        TH2D *hBkg = new TH2D ("Background",  "Background",    nbinsx2D, xbins2D, nbinsy2D, ybins2D);
+        TH2D *hData = new TH2D ("Data_BkgSub", "Data with background subtracted",    nbinsxpre, xbinspre, nbinsy2D, ybins2D);
+        TH2D *hBkg = new TH2D ("Background",  "Background",    nbinsxpre, xbinspre, nbinsy2D, ybins2D);
         TH2D *hData_unfolded = new TH2D ("Data_Unfold", "Data with background subtracted and unfolded", nbinsx2D, xbins2D, nbinsy2D, ybins2D);
         TH2D *hTrue = new TH2D ("true", "Truth",    nbinsx2D, xbins2D, nbinsy2D, ybins2D);
-        TH2D *hMeas = new TH2D ("meas", "Measured", nbinsx2D, xbins2D, nbinsy2D, ybins2D);
+        TH2D *hMeas = new TH2D ("meas", "Measured", nbinsxpre, xbinspre, nbinsy2D, ybins2D);
 		//for testing purposes
-        TH2D *hData_bkgSub_rewrapped = new TH2D ("bkgsub", "bkgsub", nbinsx2D, xbins2D, nbinsy2D, ybins2D);
+        TH2D *hData_bkgSub_rewrapped = new TH2D ("bkgsub", "bkgsub", nbinsxpre, xbinspre, nbinsy2D, ybins2D);
         //TH2D *hData_unwrapped_rewrapped = new TH2D ("lotsofwrap", "lotsofwrap", nbinsx2D, xbins2D, nbinsy2D, ybins2D);
 
 		//Unwrapped histograms have n bins (where n = nx*ny), centered around the integers from 1 to n.
-		TH1D *hData_unwrapped = new TH1D ("Data_BkgSub_Unwr", "Unwrapped data with background subtracted", nbinsunwrapped, 0.5, double(nbinsunwrapped)+0.5);
-        TH1D *hBkg_unwrapped = new TH1D ("Background_Unwr",  "Background unwrapped",    nbinsunwrapped, 0.5, double(nbinsunwrapped)+0.5);
+		TH1D *hData_unwrapped = new TH1D ("Data_BkgSub_Unwr", "Unwrapped data with background subtracted", nbinsunwrappedpre, 0.5, double(nbinsunwrappedpre)+0.5);
+        TH1D *hBkg_unwrapped = new TH1D ("Background_Unwr",  "Background unwrapped",    nbinsunwrappedpre, 0.5, double(nbinsunwrappedpre)+0.5);
         TH1D *hData_unfolded_unwrapped = new TH1D ("Data_Unfold_Unwr", "Data with background subtracted and unfolded, unwrapped", nbinsunwrapped, 0.5, double(nbinsunwrapped)+0.5);
         TH1D *hTrue_unwrapped = new TH1D ("true_unwr", "Truth unwrapped",  nbinsunwrapped, 0.5, double(nbinsunwrapped)+0.5);
-        TH1D *hMeas_unwrapped = new TH1D ("meas_unwr", "Measured unwrapped", nbinsunwrapped, 0.5, double(nbinsunwrapped)+0.5);
+        TH1D *hMeas_unwrapped = new TH1D ("meas_unwr", "Measured unwrapped", nbinsunwrappedpre, 0.5, double(nbinsunwrappedpre)+0.5);
         TH1D *hAcc_unwrapped = new TH1D ("acc_unwr", "Acceptance unwrapped", nbinsunwrapped, 0.5, double(nbinsunwrapped)+0.5);
 
-		//An n*n migration matrix, using the unwrapped binning on both axes
-        TH2D *hTrue_vs_Meas = new TH2D ("true_vs_meas", "True vs Measured", nbinsunwrapped, 0.5, double(nbinsunwrapped)+0.5, nbinsunwrapped, 0.5, double(nbinsunwrapped)+0.5);
+		//An npre*n migration matrix, using the unwrapped binning on both axes
+        TH2D *hTrue_vs_Meas = new TH2D ("true_vs_meas", "True vs Measured", nbinsunwrappedpre, 0.5, double(nbinsunwrappedpre)+0.5, nbinsunwrapped, 0.5, double(nbinsunwrapped)+0.5);
 
         TH1D *hData_bkgSub;
+
+		delete[] genbins;
+		delete[] recobins;
 
         hData->Sumw2();
         hBkg->Sumw2();
@@ -370,7 +428,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 		  unfold_TUnfold.DoUnfold(tau,hData_bkgSub, 0.0);
 		  unfold_TUnfold.GetOutput(hData_unfolded_unwrapped);*/
 
-		  TUnfoldSys unfold_TUnfold (hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone);  //need to set mode "None" here if regularizing by hand
+		  TUnfoldSys unfold_TUnfold (hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone, TUnfold::kEConstraintArea);  //need to set reg mode "None" here if regularizing by hand
 		  unfold_TUnfold.SetInput(hData_bkgSub);
 		  //Double_t biasScale=1.0;
 		  unfold_TUnfold.SetBias(hTrue_unwrapped);
@@ -391,23 +449,22 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         }
         else cout << "Unfolding TYPE not Specified" << "\n";
 
-
 		// Generate a curve of rhoAvg vs log(tau)
 		double ar_logtau[100];
 		double ar_rhoAvg[100];
-		double logtau_dan = 0.0;
+		double logtau_test = 0.0;
 		double bestlogtau = log10(tau);
 		double bestrhoavg = unfold_TUnfold.GetRhoAvg();
 
-		TUnfoldSys unfold_getRhoAvg(hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone);
+		TUnfoldSys unfold_getRhoAvg(hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone, TUnfold::kEConstraintArea);
 		unfold_getRhoAvg.SetInput(hData_bkgSub);
 		unfold_getRhoAvg.SetBias(hTrue_unwrapped);
 		unfold_getRhoAvg.RegularizeBins2D(1,1,nbinsx2D,nbinsx2D,nbinsy2D,TUnfold::kRegModeCurvature);
 
 		for(int l=0; l<100; l++) {
-		  logtau_dan = -4.0 + 0.04*l;
-		  unfold_getRhoAvg.DoUnfold(pow(10.0,logtau_dan), hData_bkgSub, 0.0);
-		  ar_logtau[l] = logtau_dan;
+		  logtau_test = -4.0 + 0.04*l;
+		  unfold_getRhoAvg.DoUnfold(pow(10.0,logtau_test), hData_bkgSub, 0.0);
+		  ar_logtau[l] = logtau_test;
 		  ar_rhoAvg[l] = unfold_getRhoAvg.GetRhoAvg();
 		}
 
@@ -423,7 +480,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 		
 
 	  
-		//Re-wrap 1D histogram into 2D
+		//Re-wrap 1D histograms into 2D
 		rewrap1dhisto(hData_unfolded_unwrapped, hData_unfolded);
 		rewrap1dhisto(hData_bkgSub, hData_bkgSub_rewrapped);
 		// rewrap1dhisto(hData_unwrapped, hData_unwrapped_rewrapped);
@@ -578,7 +635,6 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 		}
 
 
-		// Fix me at some point, please!
         for (int l = 0; l < nbinsunwrapped; l++)
         {
             for (int j = 0; j < nbinsunwrapped; j++)
