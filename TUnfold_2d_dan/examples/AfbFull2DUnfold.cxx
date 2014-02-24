@@ -71,7 +71,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 
     ofstream myfile;
     myfile.open (summary_name + ".txt");
-    cout.rdbuf(myfile.rdbuf());
+    //cout.rdbuf(myfile.rdbuf());
 
     // OGU 130516: add second output txt file with format easier to be pasted into google docs
     ofstream second_output_file;
@@ -104,7 +104,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         else if (Var2D == "ttpt") Initialize2DBinningttpt(iVar);
         bool combineLepMinus = acceptanceName == "lepCosTheta" ? true : false;
 
-		
+		/*
 		//Decide here, at runtime, whether we're using the alternate 12 x-bin configuration or the usual 6 x-bin.
 		if(iVar==0 || iVar==1) {
 		  const int nbinsxpre = nbinsx2Dalt;
@@ -118,8 +118,8 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 		  double xbinspre[nbinsxpre];
 		  for(int i=0;i<nbinsxpre+1;i++) xbinspre[i] = xbins2D[i];
 		}
+		*/
 		
-		/*
 		//Do all our bin splitting
 		int nbinsx_gen = -99;
 		int nbinsx_reco = -99;
@@ -137,6 +137,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 		genbins = new double[nbinsx_gen+1];
 		recobins = new double[nbinsx_reco+1];
 
+		//Make gen binning array
 		for( int i=0; i<nbinsx2D; i++ ) {
 		  if( iVar<2 ) {
 			genbins[i*2] = xbins2D[i];
@@ -144,41 +145,42 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 		  }
 		  else genbins[i] = xbins2D[i];
 		}
-
 		genbins[nbinsx_gen] = xbins2D[nbinsx2D];
 
+		//Make reco binning array
 		for( int i=0; i<nbinsx_gen; i++ ) {
 		  recobins[i*2] = genbins[i];
 		  recobins[i*2 +1] = ( genbins[i] + genbins[i+1] )/2.;
 		}
-
 		recobins[nbinsx_reco] = genbins[nbinsx_gen];
 
 		nbinsunwrapped_gen  = nbinsx_gen  * nbinsy2D;
 		nbinsunwrapped_reco = nbinsx_reco * nbinsy2D;
-		*/
+		
 		//Make histograms
 
 		//Use proper 2D histograms, instead of the old 1D ones
-        TH2D *hData = new TH2D ("Data_BkgSub", "Data with background subtracted",    nbinsxpre, xbinspre, nbinsy2D, ybins2D);
-        TH2D *hBkg = new TH2D ("Background",  "Background",    nbinsxpre, xbinspre, nbinsy2D, ybins2D);
-        TH2D *hData_unfolded = new TH2D ("Data_Unfold", "Data with background subtracted and unfolded", nbinsx2D, xbins2D, nbinsy2D, ybins2D);
-        TH2D *hTrue = new TH2D ("true", "Truth",    nbinsx2D, xbins2D, nbinsy2D, ybins2D);
-        TH2D *hMeas = new TH2D ("meas", "Measured", nbinsxpre, xbinspre, nbinsy2D, ybins2D);
+        TH2D *hData = new TH2D ("Data_BkgSub", "Data with background subtracted",    nbinsx_reco, recobins, nbinsy2D, ybins2D);
+        TH2D *hBkg = new TH2D ("Background",  "Background",    nbinsx_reco, recobins, nbinsy2D, ybins2D);
+        TH2D *hData_unfolded = new TH2D ("Data_Unfold", "Data with background subtracted and unfolded", nbinsx_gen, genbins, nbinsy2D, ybins2D);
+        TH2D *hTrue = new TH2D ("true", "Truth",    nbinsx_gen, genbins, nbinsy2D, ybins2D);
+        TH2D *hMeas = new TH2D ("meas", "Measured", nbinsx_reco, recobins, nbinsy2D, ybins2D);
 		//for testing purposes
-        TH2D *hData_bkgSub_rewrapped = new TH2D ("bkgsub", "bkgsub", nbinsxpre, xbinspre, nbinsy2D, ybins2D);
+        TH2D *hData_bkgSub_rewrapped = new TH2D ("bkgsub", "bkgsub", nbinsx_reco, recobins, nbinsy2D, ybins2D);
         //TH2D *hData_unwrapped_rewrapped = new TH2D ("lotsofwrap", "lotsofwrap", nbinsx2D, xbins2D, nbinsy2D, ybins2D);
 
 		//Unwrapped histograms have n bins (where n = nx*ny), centered around the integers from 1 to n.
-		TH1D *hData_unwrapped = new TH1D ("Data_BkgSub_Unwr", "Unwrapped data with background subtracted", nbinsunwrappedpre, 0.5, double(nbinsunwrappedpre)+0.5);
-        TH1D *hBkg_unwrapped = new TH1D ("Background_Unwr",  "Background unwrapped",    nbinsunwrappedpre, 0.5, double(nbinsunwrappedpre)+0.5);
-        TH1D *hData_unfolded_unwrapped = new TH1D ("Data_Unfold_Unwr", "Data with background subtracted and unfolded, unwrapped", nbinsunwrapped, 0.5, double(nbinsunwrapped)+0.5);
-        TH1D *hTrue_unwrapped = new TH1D ("true_unwr", "Truth unwrapped",  nbinsunwrapped, 0.5, double(nbinsunwrapped)+0.5);
-        TH1D *hMeas_unwrapped = new TH1D ("meas_unwr", "Measured unwrapped", nbinsunwrappedpre, 0.5, double(nbinsunwrappedpre)+0.5);
-        TH1D *hAcc_unwrapped = new TH1D ("acc_unwr", "Acceptance unwrapped", nbinsunwrapped, 0.5, double(nbinsunwrapped)+0.5);
+		TH1D *hData_unwrapped = new TH1D ("Data_BkgSub_Unwr", "Unwrapped data with background subtracted", nbinsunwrapped_reco, 0.5, double(nbinsunwrapped_reco)+0.5);
+        TH1D *hBkg_unwrapped = new TH1D ("Background_Unwr",  "Background unwrapped",    nbinsunwrapped_reco, 0.5, double(nbinsunwrapped_reco)+0.5);
+        TH1D *hData_unfolded_unwrapped = new TH1D ("Data_Unfold_Unwr", "Data with background subtracted and unfolded, unwrapped",
+												   nbinsunwrapped_gen, 0.5, double(nbinsunwrapped_gen)+0.5);
+        TH1D *hTrue_unwrapped = new TH1D ("true_unwr", "Truth unwrapped",  nbinsunwrapped_gen, 0.5, double(nbinsunwrapped_gen)+0.5);
+        TH1D *hMeas_unwrapped = new TH1D ("meas_unwr", "Measured unwrapped", nbinsunwrapped_reco, 0.5, double(nbinsunwrapped_reco)+0.5);
+        TH1D *hAcc_unwrapped = new TH1D ("acc_unwr", "Acceptance unwrapped", nbinsunwrapped_gen, 0.5, double(nbinsunwrapped_gen)+0.5);
 
-		//An npre*n migration matrix, using the unwrapped binning on both axes
-        TH2D *hTrue_vs_Meas = new TH2D ("true_vs_meas", "True vs Measured", nbinsunwrappedpre, 0.5, double(nbinsunwrappedpre)+0.5, nbinsunwrapped, 0.5, double(nbinsunwrapped)+0.5);
+		//Migration matrix, using the unwrapped binning on both axes
+        TH2D *hTrue_vs_Meas = new TH2D ("true_vs_meas", "True vs Measured", nbinsunwrapped_reco, 0.5, double(nbinsunwrapped_reco)+0.5,
+										nbinsunwrapped_gen, 0.5, double(nbinsunwrapped_gen)+0.5);
 
         TH1D *hData_bkgSub;
 
@@ -199,8 +201,8 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         hMeas_unwrapped->Sumw2();
 
 
-        TMatrixD m_unfoldE(nbinsunwrapped, nbinsunwrapped);
-        TMatrixD m_correctE(nbinsunwrapped, nbinsunwrapped);
+        TMatrixD m_unfoldE(nbinsunwrapped_gen, nbinsunwrapped_gen);
+        TMatrixD m_correctE(nbinsunwrapped_gen, nbinsunwrapped_gen);
 
 		/////////////////////////////////////////////////////////////////////////////////////////
 		///////////////////////// 2. Fill our histograms from the baby ntuples //////////////////
@@ -299,8 +301,8 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
             ch_top->SetBranchAddress("ttPt_gen", &obs2D_gen);
         }
 
-		int measbin = 0;
-		int genbin = 0;
+		int measbin = -99;
+		int genbin = -99;
 
         for (Int_t i = 0; i < ch_top->GetEntries(); i++)
         {
@@ -432,18 +434,18 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 		  unfold_TUnfold.SetInput(hData_bkgSub);
 		  //Double_t biasScale=1.0;
 		  unfold_TUnfold.SetBias(hTrue_unwrapped);
-		  unfold_TUnfold.RegularizeBins2D(1,1,nbinsx2D,nbinsx2D,nbinsy2D,TUnfold::kRegModeCurvature);
+		  unfold_TUnfold.RegularizeBins2D(1,1,nbinsx_gen,nbinsx_gen,nbinsy2D,TUnfold::kRegModeCurvature);
 		  //unfold_TUnfold.DoUnfold(tau,hData_bkgSub, 0.0);
 		  minimizeRhoAverage(&unfold_TUnfold, hData_bkgSub, 100, -4.0, 0.0);
 		  unfold_TUnfold.GetOutput(hData_unfolded_unwrapped);
 		  tau = unfold_TUnfold.GetTau();
 
-            TH2D *ematrix = unfold_TUnfold.GetEmatrix("ematrix", "error matrix", 0, 0);
-            for (Int_t cmi = 0; cmi < nbinsunwrapped; cmi++)
+		  TH2D *ematrix = unfold_TUnfold.GetEmatrix("ematrix", "error matrix", 0, 0);
+		  for (Int_t cmi = 0; cmi < nbinsunwrapped_gen; cmi++)
             {
-                for (Int_t cmj = 0; cmj < nbinsunwrapped; cmj++)
+			  for (Int_t cmj = 0; cmj < nbinsunwrapped_gen; cmj++)
                 {
-                    m_unfoldE(cmi, cmj) = ematrix->GetBinContent(cmi + 1, cmj + 1);
+				  m_unfoldE(cmi, cmj) = ematrix->GetBinContent(cmi + 1, cmj + 1);
                 }
             }
         }
@@ -459,7 +461,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 		TUnfoldSys unfold_getRhoAvg(hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone, TUnfold::kEConstraintArea);
 		unfold_getRhoAvg.SetInput(hData_bkgSub);
 		unfold_getRhoAvg.SetBias(hTrue_unwrapped);
-		unfold_getRhoAvg.RegularizeBins2D(1,1,nbinsx2D,nbinsx2D,nbinsy2D,TUnfold::kRegModeCurvature);
+		unfold_getRhoAvg.RegularizeBins2D(1,1,nbinsx_gen,nbinsx_gen,nbinsy2D,TUnfold::kRegModeCurvature);
 
 		for(int l=0; l<100; l++) {
 		  logtau_test = -4.0 + 0.04*l;
@@ -618,7 +620,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 
 
 
-        for (Int_t x = 1; x <= nbinsx2D; x++)
+        for (Int_t x = 1; x <= nbinsx_gen; x++)
         {
 		  for (Int_t y = 1; y<= nbinsy2D; y++)
 		  {
@@ -635,9 +637,9 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 		}
 
 
-        for (int l = 0; l < nbinsunwrapped; l++)
+        for (int l = 0; l < nbinsunwrapped_gen; l++)
         {
-            for (int j = 0; j < nbinsunwrapped; j++)
+            for (int j = 0; j < nbinsunwrapped_gen; j++)
             {
                 double corr = 1.0 / ( hAcc_unwrapped->GetBinContent(l + 1) * hAcc_unwrapped->GetBinContent(j + 1) );
                 //corr = corr * pow(xsection / dataIntegral,2) ;
@@ -671,10 +673,13 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         vector<double> afb_merr;
         vector<double> afb_m_denom;
         vector<double> afb_merr_denom;
+
 		cout << "From unfolded data:" << endl;
         GetAvsY2d(hData_unfolded, afb_m, afb_merr, second_output_file);
+
         cout << " With corrected uncertainty: " << endl;  //this function fills the inclusive asymmetry at array index 0, and then the asym in each y bin
         GetCorrectedAfb2d(hData_unfolded, m_correctE, afb_m, afb_merr, second_output_file);
+
 		cout << "From acceptance denominator:" << endl;
 		GetAvsY2d(denomM_2d, afb_m_denom, afb_merr_denom, second_output_file);
 

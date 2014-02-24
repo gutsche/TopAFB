@@ -253,6 +253,7 @@ void GetAvsY2d (TH2* h2, vector<double> &myafb, vector<double> &myerr, ofstream&
 	second_output_file << acceptanceName << " " << observablename << " AFB" << i << ": " << rowafb << " +/- " << rowerr << endl;
   }
 
+  delete rowhist;
 }
 
 void GetCorrectedAfb(TH1D* histogram, TMatrixD &covarianceM, Float_t &afb, Float_t  &afberr){
@@ -268,7 +269,11 @@ void GetCorrectedAfb(TH1D* histogram, TMatrixD &covarianceM, Float_t &afb, Float
 
     //Setup Alpha Vector
   double alpha[16], beta[16];
-  for(int i=0;i<nbins;i++) if(i < nbins/2 ){ alpha[i] = -1;}else{ alpha[i] = 1;}
+  for(int i=0;i<nbins;i++) {
+	if(i < nbins/2 ){ alpha[i] = -1;
+	}
+	else{ alpha[i] = 1;}
+  }
 
     //Components of the error calculation
   double sum_n = 0.;
@@ -326,7 +331,7 @@ void GetCorrectedAfb2d(TH2D* histogram, TMatrixD &covarianceM, vector<double> &m
   }
 
     //Setup Alpha Vector
-  double alpha[16], beta[16];
+  double alpha[numbinsx], beta[numbinsx];
   for(int i=0;i<numbinsx;i++) if(i < numbinsx/2 ){ alpha[i] = -1;}else{ alpha[i] = 1;}
 
     //Components of the error calculation
