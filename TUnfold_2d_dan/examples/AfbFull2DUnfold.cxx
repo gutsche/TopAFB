@@ -71,7 +71,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 
     ofstream myfile;
     myfile.open (summary_name + ".txt");
-    //cout.rdbuf(myfile.rdbuf());
+    cout.rdbuf(myfile.rdbuf());
 
     // OGU 130516: add second output txt file with format easier to be pasted into google docs
     ofstream second_output_file;
@@ -103,22 +103,6 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         else if (Var2D == "ttrapidity2") Initialize2DBinningttrapidity2(iVar);
         else if (Var2D == "ttpt") Initialize2DBinningttpt(iVar);
         bool combineLepMinus = acceptanceName == "lepCosTheta" ? true : false;
-
-		/*
-		//Decide here, at runtime, whether we're using the alternate 12 x-bin configuration or the usual 6 x-bin.
-		if(iVar==0 || iVar==1) {
-		  const int nbinsxpre = nbinsx2Dalt;
-		  const int nbinsunwrappedpre = nbinsunwrappedalt;
-		  double xbinspre[nbinsxpre];
-		  for(int i=0;i<nbinsxpre+1;i++) xbinspre[i] = xbins2Dalt[i];
-		}
-		else {
-		  const int nbinsxpre = nbinsx2D;
-		  const int nbinsunwrappedpre = nbinsunwrapped;
-		  double xbinspre[nbinsxpre];
-		  for(int i=0;i<nbinsxpre+1;i++) xbinspre[i] = xbins2D[i];
-		}
-		*/
 		
 		//Do all our bin splitting
 		int nbinsx_gen = -99;
@@ -422,17 +406,11 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         }
         else if (unfoldingType == 2)
         {
-		  /*TUnfold unfold_TUnfold (hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone);  //need to set mode "None" here if regularizing by hand
-		  unfold_TUnfold.SetInput(hData_bkgSub);
-		  //Double_t biasScale=1.0;
-		  unfold_TUnfold.SetBias(hTrue_unwrapped);
-		  unfold_TUnfold.RegularizeBins2D(1,1,nbinsx2D,nbinsx2D,nbinsy2D,TUnfold::kRegModeCurvature);
-		  unfold_TUnfold.DoUnfold(tau,hData_bkgSub, 0.0);
-		  unfold_TUnfold.GetOutput(hData_unfolded_unwrapped);*/
-
 		  TUnfoldSys unfold_TUnfold (hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone, TUnfold::kEConstraintArea);  //need to set reg mode "None" here if regularizing by hand
 		  unfold_TUnfold.SetInput(hData_bkgSub);
 		  //Double_t biasScale=1.0;
+		  scaleBias = hData_bkgSub->Integral() / hTrue_unwrapped->Integral();
+		  hTrue_unwrapped->Scale(scaleBias);
 		  unfold_TUnfold.SetBias(hTrue_unwrapped);
 		  unfold_TUnfold.RegularizeBins2D(1,1,nbinsx_gen,nbinsx_gen,nbinsy2D,TUnfold::kRegModeCurvature);
 		  //unfold_TUnfold.DoUnfold(tau,hData_bkgSub, 0.0);
@@ -465,7 +443,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 
 		for(int l=0; l<100; l++) {
 		  logtau_test = -4.0 + 0.04*l;
-		  unfold_getRhoAvg.DoUnfold(pow(10.0,logtau_test), hData_bkgSub, 0.0);
+		  unfold_getRhoAvg.DoUnfold(pow(10.0,logtau_test), hData_bkgSub, scaleBias);
 		  ar_logtau[l] = logtau_test;
 		  ar_rhoAvg[l] = unfold_getRhoAvg.GetRhoAvg();
 		}
@@ -654,6 +632,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 
 		cout << "Automatic tau = " << tau << endl;
 		cout << "Minimum rhoAvg = " << bestrhoavg << endl;
+		cout << "Bias scale = " << scaleBias << endl;
 
         GetAfb(hData, Afb, AfbErr);
         cout << " Data: " << Afb << " +/-  " << AfbErr << "\n";

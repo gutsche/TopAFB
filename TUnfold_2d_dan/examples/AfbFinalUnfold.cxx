@@ -44,7 +44,7 @@ Double_t tau = 0.005; //for TUnfold - this is a more reasonable default (1E-4 gi
 bool doScanLCurve = false; //determine tau automatically when using unfoldingType=2, using scanLcurve (overrides value set above) - doesn't work very well
 Int_t nVars = 8;
 Int_t includeSys = 0;
-bool checkErrors = true; //turn this on when making the final plots for the paper, to check the hard-coded systematics have been correctly entered
+bool checkErrors = false; //turn this on when making the final plots for the paper, to check the hard-coded systematics have been correctly entered
 bool draw_truth_before_pT_reweighting = true; //turn this on when making the final plots for the paper (want to compare the data against the unweighted MC)
 //bool drawTheory = true; //turn this on to show Bernreuther's predictions for AdeltaPhi and Ac1c2
 
@@ -64,7 +64,7 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
 
     ofstream myfile;
     myfile.open (summary_name + ".txt");
-    cout.rdbuf(myfile.rdbuf());
+	cout.rdbuf(myfile.rdbuf());
 
     // OGU 130516: add second output txt file with format easier to be pasted into google docs
     ofstream second_output_file;
@@ -88,7 +88,6 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
     {
 
         Initialize1DBinning(iVar);
-		//unfoldingType = 0; //a hack to disable rebinning
 
 		int nbinsx_gen = -99;
 		int nbinsx_reco = -99;
@@ -122,51 +121,8 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
 		recobins[nbinsx_reco] = genbins[nbinsx_gen];
 
 
-		/*
-        //use twice as many reco bins for TUnfold
-        int recobinsmult = 2;
-        if (unfoldingType == 0) recobinsmult = 1;
-        const int nbins1Dreco = nbins1D * recobinsmult;
-        double xbins1Dreco[nbins1Dreco + 1];
-
-        for (int i = 0; i < nbins1Dreco + 1; ++i)
-        {
-            if (unfoldingType == 0) xbins1Dreco[i] = xbins1D[i];
-            else xbins1Dreco[i] = (xbins1D[int(i / 2)] + xbins1D[int((i + 1) / 2)]) / 2.;  //reco-level bins from dividing gen-level bins in 2
-            //else xbins1Dreco[i] = xmin + double(i) / nbins1Dreco * (xmax - xmin); //uniform reco-level bins
-            //cout << xbins1Dreco[i] << endl;
-        }
-
-		//unfoldingType = 2; //un-hack
-
-
-		//Decide here, at runtime, whether we're using the alternate 12 x-bin configuration or the usual 6 x-bin.
-		if(iVar==0 || iVar==1) {
-		  const int nbinsxpre = nbinsx2Dalt;
-		  const int nbinsunwrappedpre = nbinsunwrappedalt;
-		  double xbinspre[nbinsxpre];
-		  for(int i=0;i<nbinsxpre+1;i++) xbinspre[i] = xbins2Dalt[i];
-		}
-		else {
-		  const int nbinsxpre = nbinsx2D;
-		  const int nbinsunwrappedpre = nbinsunwrapped;
-		  double xbinspre[nbinsxpre];
-		  for(int i=0;i<nbinsxpre+1;i++) xbinspre[i] = xbins2D[i];
-		}
-		*/
-
         bool combineLepMinus = acceptanceName == "lepCosTheta" ? true : false;
-		/*
-        TH1D *hData = new TH1D ("Data_BkgSub", "Data with background subtracted",    nbins1Dreco, xbins1Dreco);
-        TH1D *hBkg = new TH1D ("Background",  "Background",    nbins1Dreco, xbins1Dreco);
-        TH1D *hData_unfolded = new TH1D ("Data_Unfold", "Data with background subtracted and unfolded", nbins1D, xbins1D);
 
-        TH1D *hTrue = new TH1D ("true", "Truth",    nbins1D, xbins1D);
-        TH1D *hMeas = new TH1D ("meas", "Measured", nbins1Dreco, xbins1Dreco);
-        TH1D *denominatorM_nopTreweighting = new TH1D ("denominatorM_nopTreweighting", "denominatorM_nopTreweighting",    nbins1D, xbins1D);
-
-        TH2D *hTrue_vs_Meas = new TH2D ("true_vs_meas", "True vs Measured", nbins1Dreco, xbins1Dreco, nbins1D, xbins1D);
-		*/
         TH1D *hData = new TH1D ("Data_BkgSub", "Data with background subtracted",    nbinsx_reco, recobins);
         TH1D *hBkg = new TH1D ("Background",  "Background",    nbinsx_reco, recobins);
         TH1D *hData_unfolded = new TH1D ("Data_Unfold", "Data with background subtracted and unfolded", nbinsx_gen, genbins);
@@ -189,11 +145,6 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
         hMeas->Sumw2();
         hTrue_vs_Meas->Sumw2();
 
-		/*
-        TMatrixD m_unfoldE (nbins1D, nbins1D);
-        TMatrixD m_correctE(nbins1D, nbins1D);
-        TMatrixD m_unfoldcorr (nbins1D, nbins1D);
-		*/
         TMatrixD m_unfoldE (nbinsx_gen, nbinsx_gen);
         TMatrixD m_correctE(nbinsx_gen, nbinsx_gen);
         TMatrixD m_unfoldcorr (nbinsx_gen, nbinsx_gen);
@@ -394,8 +345,8 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
         hData_bkgSub = (TH1D *) hData->Clone();
         hData_bkgSub->Add(hBkg, -1.0);
 
-        Double_t biasScale =  hData_bkgSub->Integral() / hMeas->Integral() ;
-        hMeas->Scale(biasScale);
+        scaleBias =  hData_bkgSub->Integral() / hMeas->Integral() ;
+        hMeas->Scale(scaleBias);
 
         TCanvas *c_reco = new TCanvas("c_reco", "c_reco", 500, 500);
 
@@ -498,11 +449,11 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
 			minimizeRhoAverage(&unfold_TUnfold, hData_bkgSub, 100, -5.0, 0.0);
 			tau = unfold_TUnfold.GetTau();
 
-            //biasScale = 0.0; //set biasScale to 0 when using kRegModeSize, or to compare with unfoldingType == 1
-            //do the unfolding with calculated bias scale (N_data/N_MC), and tau from ScanLcurve if doScanLCurve=true. Note that the results will only be the same as unfoldingType == 1 with biasScale=0 and the same value of tau.
-            cout << "bias scale for TUnfold: " << biasScale << endl;
-            unfold_TUnfold.DoUnfold(tau, hData_bkgSub, biasScale);
-            //unfold_TUnfold.DoUnfold(0.005,hData_bkgSub,biasScale);
+            //scaleBias = 0.0; //set biasScale to 0 when using kRegModeSize, or to compare with unfoldingType == 1
+            //do the unfolding with calculated bias scale (N_data/N_MC), and tau from ScanLcurve if doScanLCurve=true. Note that the results will only be the same as unfoldingType == 1 with scaleBias=0 and the same value of tau.
+            cout << "bias scale for TUnfold: " << scaleBias << endl;
+            unfold_TUnfold.DoUnfold(tau, hData_bkgSub, scaleBias);
+            //unfold_TUnfold.DoUnfold(0.005,hData_bkgSub,scaleBias);
 
 
             unfold_TUnfold.GetOutput(hData_unfolded);
@@ -786,10 +737,11 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
                 }
             }
             //hData_unfolded          ->SetBinError(i, stat_uncorr[i - 1]);  //running with includeSys = 0 means we can use the RooUnfold stat-only errors
-            hData_unfolded_minussyst->SetBinContent(i, hData_unfolded->GetBinContent(i)
-                                                    - sqrt(  pow(syst_corr[i - 1], 2)));  //hard-coded syst_corr now includes unfolding syst
+            //hData_unfolded_minussyst->SetBinContent(i, hData_unfolded->GetBinContent(i) - sqrt(  pow(syst_corr[i - 1], 2)));  //hard-coded syst_corr now includes unfolding syst
+			hData_unfolded_minussyst->SetBinContent(i, 0);  //hard-coded syst_corr now includes unfolding syst
             hData_unfolded_minussyst->SetBinError(i, 0);
-            hData_unfolded_plussyst ->SetBinContent(i, 2 * sqrt( pow(syst_corr[i - 1], 2)));  //hard-coded syst_corr now includes unfolding syst
+            //hData_unfolded_plussyst ->SetBinContent(i, 2 * sqrt( pow(syst_corr[i - 1], 2)));  //hard-coded syst_corr now includes unfolding syst
+            hData_unfolded_plussyst ->SetBinContent(i, 0);
             hData_unfolded_plussyst ->SetBinError(i, 0);
         }
 

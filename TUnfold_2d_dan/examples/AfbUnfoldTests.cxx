@@ -84,36 +84,6 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
 	else if (Var2D == "ttrapidity2") Initialize2DBinningttrapidity2(iVar);
 	else if (Var2D == "ttpt") Initialize2DBinningttpt(iVar);
 
-	/*
-	//Decide here, at runtime, whether we're using the alternate 12 x-bin configuration or the usual 6 x-bin.
-	if(iVar==0 || iVar==1) {
-	  const int nbinsxpre = nbinsx2Dalt;
-	  const int nbinsunwrappedpre = nbinsunwrappedalt;
-	  double xbinspre[nbinsxpre];
-	  for(int i=0;i<nbinsxpre+1;i++) xbinspre[i] = xbins2Dalt[i];
-	}
-	else {
-	  const int nbinsxpre = nbinsx2D;
-	  const int nbinsunwrappedpre = nbinsunwrapped;
-	  double xbinspre[nbinsxpre];
-	  for(int i=0;i<nbinsxpre+1;i++) xbinspre[i] = xbins2D[i];
-	}
-
-    //use twice as many reco bins for TUnfold
-    int recobinsmult = 2;
-    if (unfoldingType == 0) recobinsmult = 1;
-    const int nbins1Dreco = nbins1D * recobinsmult;
-    double xbins1Dreco[nbins1Dreco + 1];
-
-    for (int i = 0; i < nbins1Dreco + 1; ++i)
-    {
-        if (unfoldingType == 0) xbins1Dreco[i] = xbins1D[i];
-        else xbins1Dreco[i] = (xbins1D[int(i / 2)] + xbins1D[int((i + 1) / 2)]) / 2.;  //reco-level bins from dividing gen-level bins in 2
-        //else xbins1Dreco[i] = xmin + double(i) / nbins1Dreco * (xmax - xmin); //uniform reco-level bins
-        cout << xbins1Dreco[i] << endl;
-    }
-	*/
-
 	//Do all our bin splitting
 	int nbinsx_gen = -99;
 	int nbinsx_reco = -99;

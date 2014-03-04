@@ -766,7 +766,7 @@ syst_corr[5] =  0.016122  ; stat_corr[5] =  0.032788  ; stat_uncorr[5] =  0.0245
 
 void Initialize2DBinning(int iVar){
 
-  ybins2D[0]=0.0; ybins2D[1]=430; ybins2D[2]=530.0; ybins2D[3]=800.0;  // KIT binning
+  ybins2D[0]=0.0; ybins2D[1]=430; ybins2D[2]=530.0; ybins2D[3]=1200.0;  // KIT binning
   //ybins2D[0]=0.0; ybins2D[1]=410; ybins2D[2]=510.0; ybins2D[3]=800.0;   // SnT binning
 
   switch (iVar)
@@ -986,7 +986,7 @@ syst_corr[2] =  0.009654  ; stat_corr[2] =  0.033674  ; stat_uncorr[2] =  0.0237
 
 void Initialize2DBinningttpt(int iVar){
 
-  ybins2D[0]=0.0; ybins2D[1]=41.0; ybins2D[2]=92.0; ybins2D[3]=150.0;
+  ybins2D[0]=0.0; ybins2D[1]=41.0; ybins2D[2]=92.0; ybins2D[3]=300.0;
 
   switch (iVar)
   {
@@ -1523,7 +1523,7 @@ void rewrap1dhisto(TH1* h1, TH2* h2)
 
 
 // The following is also copied from the KIT group code
-double scaleBias;
+double scaleBias = -99.9;
 TUnfoldSys* myUnfold_TUnfoldGlobalPointerForTMinuit;
 TH1D* myUnfold_hdataGlobalPointerForTMinuit;
 
