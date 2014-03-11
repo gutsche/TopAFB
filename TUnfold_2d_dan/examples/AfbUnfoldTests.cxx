@@ -175,11 +175,14 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
     TH2D *hSmeared = new TH2D ("smeared", "Smeared", nbinsx_reco, recobins, nbinsy2D, ybins2D);
     TH2D *hUnfolded = new TH2D ("unfolded", "Unfolded", nbinsx_gen, genbins, nbinsy2D, ybins2D);
 
+	TH2D *hBkg = new TH2D ("Background",  "Background",    nbinsx_reco, recobins, nbinsy2D, ybins2D);
+
 	// 1D histograms to store the unwrapped distributions
     TH1D *hTrue_before_unwrapped = new TH1D ("trueBeforeScalingUnwr", "Truth Before Unwrapped",    nbinsunwrapped_gen, 0.5, double(nbinsunwrapped_gen)+0.5); //Bias distribution
     TH1D *hSmeared_unwrapped = new TH1D ("smearedUnwr", "Smeared Unwrapped", nbinsunwrapped_reco, 0.5, double(nbinsunwrapped_reco)+0.5); //Input to TUnfold
 	TH1D *hUnfolded_unwrapped = new TH1D ("unfoldedUnwr", "Unfolded Unwrapped", nbinsunwrapped_gen, 0.5, double(nbinsunwrapped_gen)+0.5); //Output from TUnfold
 	TH1D *hAcc_unwrapped = new TH1D ("acc_unwr", "Acceptance unwrapped", nbinsunwrapped_gen, 0.5, double(nbinsunwrapped_gen)+0.5); //Unwrapped acceptance matrix
+	TH1D *hBkg_unwrapped = new TH1D ("Background_Unwr",  "Background unwrapped",    nbinsunwrapped_reco, 0.5, double(nbinsunwrapped_reco)+0.5);
 
     TH1D *hTrue_after_unwrapped = new TH1D ("trueAfterScalingUnwr", "Truth Unwrapped",    nbinsunwrapped_gen, 0.5, double(nbinsunwrapped_gen)+0.5);
     // TH1D *hMeas_after_unwrapped = new TH1D ("measAfterScalingUnwr", "Measured Unwrapped", nbinsunwrapped, 0.5, double(nbinsunwrapped)+0.5);
@@ -210,6 +213,7 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
     hMeas_after->Sumw2();
     hSmeared->Sumw2();
     hUnfolded->Sumw2();
+	hBkg->Sumw2();
 
 	hTrue_after_unwrapped->Sumw2();
 	// hMeas_after_unwrapped->Sumw2();
@@ -217,6 +221,7 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
 	hSmeared_unwrapped->Sumw2();
 	hTrue_before_unwrapped->Sumw2();
 	hAcc_unwrapped->Sumw2();
+	hBkg_unwrapped->Sumw2();
 
     hTrue_vs_Meas->Sumw2();
 
@@ -239,17 +244,47 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
 	/////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////// 2. Fill our histograms from the baby ntuples //////////////////
 
-	// Set up event tree /////////////////////
-    TFile *file = new TFile("../ttdil.root");
-    TTree *evtree = (TTree *) file->Get("tree");
-    Int_t entries = (Int_t)evtree->GetEntries();
-    cout << "RESPONSE: Number of Entries: " << entries << endl;
-
     Float_t asymVar, asymVar_gen, tmass, ttmass, ttmass_gen;
     Float_t asymVarMinus, asymVarMinus_gen;
 	Float_t obs2D, obs2D_gen;
     Double_t weight;
     Int_t Nsolns;
+
+	// Background events ///////////////
+	TChain *ch_bkg = new TChain("tree");
+	ch_bkg->Add("../ttotr.root");
+	ch_bkg->Add("../wjets.root");
+	ch_bkg->Add("../DYee.root");
+	ch_bkg->Add("../DYmm.root");
+	ch_bkg->Add("../DYtautau.root");
+	ch_bkg->Add("../tw.root");
+	ch_bkg->Add("../VV.root");
+
+	ch_bkg->SetBranchAddress(observablename,    &asymVar);
+	if ( combineLepMinus ) ch_bkg->SetBranchAddress("lepMinus_costheta_cms",    &asymVarMinus);
+	ch_bkg->SetBranchAddress("weight", &weight);
+	ch_bkg->SetBranchAddress("Nsolns", &Nsolns);
+	ch_bkg->SetBranchAddress("t_mass", &tmass);
+
+	if (Var2D == "mtt")              ch_bkg->SetBranchAddress("tt_mass", &obs2D);
+	else if (Var2D == "ttrapidity2") ch_bkg->SetBranchAddress("ttRapidity2", &obs2D);
+	else if (Var2D == "ttpt")        ch_bkg->SetBranchAddress("ttPt", &obs2D);
+
+	for (Int_t i = 0; i < ch_bkg->GetEntries(); i++) {
+	  ch_bkg->GetEntry(i);
+	  obs2D = fabs(obs2D);
+	  //weight *= bkgSF;
+	  if ( tmass > 0 ) {
+		fillUnderOverFlow(hBkg, asymVar, obs2D, weight, Nsolns);
+		if (combineLepMinus)  fillUnderOverFlow(hBkg, asymVarMinus, obs2D, weight, Nsolns);
+	  }
+	}
+
+	// Data events /////////////////////
+    TFile *file = new TFile("../ttdil.root");
+    TTree *evtree = (TTree *) file->Get("tree");
+    Int_t entries = (Int_t)evtree->GetEntries();
+    cout << "RESPONSE: Number of Entries: " << entries << endl;
 
     evtree->SetBranchAddress(observablename,    &asymVar);
     evtree->SetBranchAddress(observablename + "_gen", &asymVar_gen);
@@ -325,7 +360,7 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
         hTrue_vs_Meas->Reset();
         for (int iD = 0; iD < nbinsy2D + nbinsunwrapped_gen + 1; ++iD)
         {
-            AfbPull[iD]->Reset();
+            AfbPull[iD].Reset();
         }
 
         for (Int_t i = 0; i < entries; i++)
@@ -342,7 +377,7 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
 			obs2D = fabs(obs2D);
 			obs2D_gen = fabs(obs2D_gen);
 
-            if (slopeOption == 1)
+            /*if (slopeOption == 1)
             {
 			  //fix the observable values to the bin centres so the acceptance function is unaffected by any reweighting
 			  asymVar =  hEmpty->GetXaxis()->GetBinCenter( hEmpty->FindBin( asymVar, obs2D ) );
@@ -354,7 +389,7 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
 				  asymVarMinus =  hEmpty->GetXaxis()->GetBinCenter( hEmpty->FindBin( asymVarMinus, obs2D ) );
 				  asymVarMinus_gen =  hEmpty_gen->GetXaxis()->GetBinCenter( hEmpty_gen->FindBin( asymVarMinus_gen, obs2D_gen ) );
                 }
-            }
+			}*/
 
             double xval = (asymVar_gen - asym_centre) / fabs(xmax - asym_centre);
             double xsign = sign(xval);
@@ -414,10 +449,22 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
 		if (k == -1) {
 		  unwrap2dhisto(hTrue_before, hTrue_before_unwrapped);
 		  unwrap2dhisto(hMeas_before, hSmeared_unwrapped);
+		  unwrap2dhisto(hBkg,         hBkg_unwrapped);
+
+		  //Set data-like stat errors on MC for optimizing tau
+		  for( int i=1; i<nbinsunwrapped_reco+1; i++) {
+			double n_sig = hSmeared_unwrapped->GetBinContent(i);
+			double n_bkg = hBkg_unwrapped->GetBinContent(i);
+			double bkg_err = hBkg_unwrapped->GetBinError(i);
+			hSmeared_unwrapped->SetBinError(i, sqrt(n_sig + n_bkg + bkg_err*bkg_err ) );
+			//hSmeared_unwrapped->SetBinError(i, 2.0);
+		  }
+
+		  scaleBias = hSmeared_unwrapped->Integral() / hTrue_before_unwrapped->Integral();
 
 		  TUnfoldSys unfold_FindTau (hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone, TUnfold::kEConstraintArea);
 		  unfold_FindTau.SetInput(hSmeared_unwrapped);
-		  unfold_FindTau.SetBias(hTrue_before_unwrapped);
+		  //unfold_FindTau.SetBias(hTrue_before_unwrapped);
 		  unfold_FindTau.RegularizeBins2D(1,1,nbinsx_gen,nbinsx_gen,nbinsy2D,TUnfold::kRegModeCurvature);
 		  minimizeRhoAverage(&unfold_FindTau, hSmeared_unwrapped, 100, -4.0, 0.0);
 		  // unfold_FindTau.GetOutput(hData_unfolded_unwrapped);
@@ -432,7 +479,7 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
 
 		  for(int l=0; l<100; l++) {
 			logtau_test = -4.0 + 0.04*l;
-			unfold_FindTau.DoUnfold(pow(10.0,logtau_test), hSmeared_unwrapped, 0.0);
+			unfold_FindTau.DoUnfold(pow(10.0,logtau_test), hSmeared_unwrapped, scaleBias);
 			ar_logtau[l] = logtau_test;
 			ar_rhoAvg[l] = unfold_FindTau.GetRhoAvg();
 		  }
@@ -448,6 +495,7 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
 		  c_rhoAvg->SaveAs(acceptanceName + "_unfoldTests_minRho.svg");
 
 		  cout << "Optimal tau value: " << tau << endl;
+		  cout << "Minimum rho average: " << bestrhoavg << endl;
 		  continue;
 		}
 
@@ -559,13 +607,12 @@ void AfbUnfoldTests(Int_t iVar = 0, TString TestType = "Linearity", Int_t slopeO
 			  else if (unfoldingType == 2)
                 {
 				  TUnfold unfold_TUnfold (hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone, TUnfold::kEConstraintArea);
-				  Double_t biasScale = 1.0;
-				  biasScale =  hSmeared->Integral() / hMeas_before->Integral() ;
-				  cout << "bias scale for TUnfold: " << biasScale << endl;
+				  scaleBias =  hSmeared->Integral() / hMeas_before->Integral() ;
+				  cout << "bias scale for TUnfold: " << scaleBias << endl;
 				  unfold_TUnfold.SetBias(hTrue_before_unwrapped);  //doesn't make any difference, because if not set the bias distribution is automatically determined from hTrue_vs_Meas, which gives exactly hTrue
 				  unfold_TUnfold.SetInput(hSmeared_unwrapped);
 				  unfold_TUnfold.RegularizeBins2D(1,1,nbinsx_gen,nbinsx_gen,nbinsy2D,TUnfold::kRegModeCurvature);
-				  unfold_TUnfold.DoUnfold(tau, hSmeared_unwrapped, biasScale);
+				  unfold_TUnfold.DoUnfold(tau, hSmeared_unwrapped, scaleBias);
 				  unfold_TUnfold.GetOutput(hUnfolded_unwrapped);
 
 

@@ -489,7 +489,7 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
 
 		for(int l=0; l<100; l++) {
 		  logtau_dan = -5.0 + 0.05*l;
-		  unfold_getRhoAvg.DoUnfold(pow(10.0,logtau_dan), hData_bkgSub, 0.0);
+		  unfold_getRhoAvg.DoUnfold(pow(10.0,logtau_dan), hData_bkgSub, scaleBias);
 		  ar_logtau[l] = logtau_dan;
 		  ar_rhoAvg[l] = unfold_getRhoAvg.GetRhoAvg();
 		}

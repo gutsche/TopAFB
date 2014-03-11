@@ -377,6 +377,18 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         hData_bkgSub = (TH1D *) hData_unwrapped->Clone();
         hData_bkgSub->Add(hBkg_unwrapped, -1.0);
 
+		/*
+		hMeas_newErr = (TH1D *) hMeas_unwrapped->Clone();
+		hMeas_newErr->Scale( hData_bkgSub->Integral() / hMeas_newErr->Integral() );
+		for( int i=1; i<nbinsunwrapped_reco+1; i++) {
+		  double n_sig = hMeas_unwrapped->GetBinContent(i);
+		  double n_bkg = hBkg_unwrapped->GetBinContent(i);
+		  double bkg_err = hBkg_unwrapped->GetBinError(i);
+		  //hMeas_newErr->SetBinError(i, sqrt(n_sig + n_bkg + bkg_err*bkg_err ) );
+		  //hMeas_newErr->SetBinError(i, 2.0);
+		}
+		*/
+
         // TCanvas *c_data = new TCanvas("c_data", "c_data");
 		// hData_bkgSub->Draw();
         // c_data->SaveAs(Var2D + "_data_unwrapped_" + acceptanceName + Region + ".pdf");
@@ -408,10 +420,9 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         {
 		  TUnfoldSys unfold_TUnfold (hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone, TUnfold::kEConstraintArea);  //need to set reg mode "None" here if regularizing by hand
 		  unfold_TUnfold.SetInput(hData_bkgSub);
-		  //Double_t biasScale=1.0;
 		  scaleBias = hData_bkgSub->Integral() / hTrue_unwrapped->Integral();
 		  hTrue_unwrapped->Scale(scaleBias);
-		  unfold_TUnfold.SetBias(hTrue_unwrapped);
+		  //unfold_TUnfold.SetBias(hTrue_unwrapped);
 		  unfold_TUnfold.RegularizeBins2D(1,1,nbinsx_gen,nbinsx_gen,nbinsy2D,TUnfold::kRegModeCurvature);
 		  //unfold_TUnfold.DoUnfold(tau,hData_bkgSub, 0.0);
 		  minimizeRhoAverage(&unfold_TUnfold, hData_bkgSub, 100, -4.0, 0.0);
@@ -438,7 +449,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 
 		TUnfoldSys unfold_getRhoAvg(hTrue_vs_Meas, TUnfold::kHistMapOutputVert, TUnfold::kRegModeNone, TUnfold::kEConstraintArea);
 		unfold_getRhoAvg.SetInput(hData_bkgSub);
-		unfold_getRhoAvg.SetBias(hTrue_unwrapped);
+		//unfold_getRhoAvg.SetBias(hTrue_unwrapped);
 		unfold_getRhoAvg.RegularizeBins2D(1,1,nbinsx_gen,nbinsx_gen,nbinsy2D,TUnfold::kRegModeCurvature);
 
 		for(int l=0; l<100; l++) {
