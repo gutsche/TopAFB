@@ -96,6 +96,7 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
 		else nbinsx_gen = nbins1D;
 
 		nbinsx_reco = nbinsx_gen*2;
+		//nbinsx_reco = nbinsx_gen;
 
 		double* genbins;
 		double* recobins;
@@ -115,8 +116,11 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
 
 		//Make reco binning array
 		for( int i=0; i<nbinsx_gen; i++ ) {
-		  recobins[i*2] = genbins[i];
-		  recobins[i*2 +1] = ( genbins[i] + genbins[i+1] )/2.;
+		  if( nbinsx_reco > nbinsx_gen ) {
+			recobins[i*2] = genbins[i];
+			recobins[i*2 +1] = ( genbins[i] + genbins[i+1] )/2.;
+		  }
+		  else recobins[i] = genbins[i];
 		}
 		recobins[nbinsx_reco] = genbins[nbinsx_gen];
 
@@ -478,7 +482,7 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
 		// Generate a curve of rhoAvg vs log(tau)
 		double ar_logtau[100];
 		double ar_rhoAvg[100];
-		double logtau_dan = 0.0;
+		double logtau_test = 0.0;
 		double bestlogtau = log10(tau);
 		double bestrhoavg = unfold_TUnfold.GetRhoAvg();
 
@@ -488,9 +492,9 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
 		//unfold_getRhoAvg.RegularizeBins2D(1,1,nbinsx2D,nbinsx2D,nbinsy2D,TUnfold::kRegModeCurvature);
 
 		for(int l=0; l<100; l++) {
-		  logtau_dan = -5.0 + 0.05*l;
-		  unfold_getRhoAvg.DoUnfold(pow(10.0,logtau_dan), hData_bkgSub, scaleBias);
-		  ar_logtau[l] = logtau_dan;
+		  logtau_test = -5.0 + 0.05*l;
+		  unfold_getRhoAvg.DoUnfold(pow(10.0,logtau_test), hData_bkgSub, scaleBias);
+		  ar_logtau[l] = logtau_test;
 		  ar_rhoAvg[l] = unfold_getRhoAvg.GetRhoAvg();
 		}
 
@@ -530,7 +534,7 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
         //c_resp->SaveAs("Response_" + acceptanceName + Region + ".root");
 		
 
-        TFile *file = new TFile("../acceptance/mcnlo/accept_" + acceptanceName + ".root");
+        TFile *file = new TFile("../acceptance/old_800_gensplit/accept_" + acceptanceName + ".root");
         TH1D *acceptM = (TH1D *) file->Get("accept_" + acceptanceName);
         acceptM->Scale(1.0 / acceptM->Integral());
 

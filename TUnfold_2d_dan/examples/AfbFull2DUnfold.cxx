@@ -114,6 +114,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 		else nbinsx_gen = nbinsx2D;
 
 		nbinsx_reco = nbinsx_gen*2;
+		//nbinsx_reco = nbinsx_gen;
 
 		double* genbins;
 		double* recobins;
@@ -133,8 +134,11 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 
 		//Make reco binning array
 		for( int i=0; i<nbinsx_gen; i++ ) {
-		  recobins[i*2] = genbins[i];
-		  recobins[i*2 +1] = ( genbins[i] + genbins[i+1] )/2.;
+		  if( nbinsx_reco > nbinsx_gen ) {
+			recobins[i*2] = genbins[i];
+			recobins[i*2 +1] = ( genbins[i] + genbins[i+1] )/2.;
+		  }
+		  else recobins[i] = genbins[i];
 		}
 		recobins[nbinsx_reco] = genbins[nbinsx_gen];
 
@@ -167,6 +171,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 										nbinsunwrapped_gen, 0.5, double(nbinsunwrapped_gen)+0.5);
 
         TH1D *hData_bkgSub;
+		TH1D* hMeas_newErr;
 
 		delete[] genbins;
 		delete[] recobins;
@@ -316,53 +321,6 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 
         RooUnfoldResponse response (hMeas, hTrue, hTrue_vs_Meas);
 
-		///////////// Set up and draw some stuff ////////////////////////////////
-		// Note: probably this section is broken by the switch to true 2D unfolding
-
-		/*
-        TCanvas *c_mtt = new TCanvas("c_mtt", "c_mtt", 500, 500);
-
-        hData->SetLineWidth(lineWidth + 2);
-
-        hTrue->SetLineColor(TColor::GetColorDark(kGreen));
-        hTrue->SetFillColor(TColor::GetColorDark(kGreen));
-        hTrue->SetFillStyle(3353);
-
-        hMeas->SetLineColor(TColor::GetColorDark(kGreen));
-        hMeas->SetFillColor(TColor::GetColorDark(kGreen));
-        hMeas->SetFillStyle(3353);
-
-        hBkg->SetLineColor(kYellow);
-        hBkg->SetFillColor(kYellow);
-
-
-        THStack *hs = new THStack("hs", "Stacked Top+BG");  //does it even make sense to have a THStack anymore?
-
-        hs->Add(hBkg);
-        hs->Add(hMeas);
-
-        hs->SetMinimum(0.0);
-        hs->SetMaximum( 2.0 * hs->GetMaximum());
-        hs->Draw("hist");
-        hs->GetXaxis()->SetTitle(yaxislabel + yaxisunit);
-        hs->GetYaxis()->SetTitleOffset(1.3);
-        hs->GetYaxis()->SetTitle("Events");
-
-        hData->Draw("E same");
-
-        TLegend *leg1 = new TLegend(0.6, 0.62, 0.9, 0.838, NULL, "brNDC");
-        leg1->SetEntrySeparation(100);
-        leg1->SetFillColor(0);
-        leg1->SetLineColor(0);
-        leg1->SetBorderSize(0);
-        leg1->SetTextSize(0.03);
-        leg1->SetFillStyle(0);
-        leg1->AddEntry(hData, "Data");
-        leg1->AddEntry(hMeas,  "MC@NLO reco level", "F");
-        leg1->AddEntry(hBkg,  "Background", "F");
-        leg1->Draw();
-        c_mtt->SaveAs(Var2D + "_" + acceptanceName + Region + ".pdf");
-		*/
 
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
@@ -384,8 +342,10 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 		  double n_sig = hMeas_unwrapped->GetBinContent(i);
 		  double n_bkg = hBkg_unwrapped->GetBinContent(i);
 		  double bkg_err = hBkg_unwrapped->GetBinError(i);
-		  //hMeas_newErr->SetBinError(i, sqrt(n_sig + n_bkg + bkg_err*bkg_err ) );
+		  double mcerr = hMeas_newErr->GetBinError(i);
+		  hMeas_newErr->SetBinError(i, sqrt(n_sig + n_bkg + bkg_err*bkg_err ) );
 		  //hMeas_newErr->SetBinError(i, 2.0);
+		  //hMeas_newErr->SetBinError(i, mcerr*10.);
 		}
 		*/
 
@@ -531,82 +491,14 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         c_resp->SetLogz();
         c_resp->SaveAs(Var2D + "_Response_true2D_" + acceptanceName + Region + ".pdf");
 
+		// Make acceptance corrections ///////////////////////////////////////////////////
 
-        TFile *file = new TFile("../acceptance/mcnlo/accept_" + acceptanceName + ".root");
+        TFile *file = new TFile("../acceptance/kit_1200_gensplit/accept_" + acceptanceName + ".root");
 
         TH2D *acceptM_2d = (TH2D *) file->Get("accept_" + acceptanceName + "_" + Var2D);
         unwrap2dhisto(acceptM_2d, hAcc_unwrapped);
 
         TH2D *denomM_2d = (TH2D *) file->Get("denominator_" + acceptanceName + "_" + Var2D);
-
-
-
-		/*
-        TH1D *acceptM = new TH1D ("accept", "accept",    nbins2D, xbins2D);
-        acceptM->SetBinContent(1, acceptM_2d->GetBinContent(1, 3));
-        acceptM->SetBinContent(2, acceptM_2d->GetBinContent(1, 2));
-        acceptM->SetBinContent(3, acceptM_2d->GetBinContent(1, 1));
-
-        acceptM->SetBinContent(4, acceptM_2d->GetBinContent(2, 1));
-        acceptM->SetBinContent(5, acceptM_2d->GetBinContent(2, 2));
-        acceptM->SetBinContent(6, acceptM_2d->GetBinContent(2, 3));
-
-        acceptM->Scale(1.0 / acceptM->Integral());
-		
-
-
-        TH1D *denomM = new TH1D ("denom", "denom",    nbins2D, xbins2D);
-
-        denomM->SetBinContent(1, denomM_2d->GetBinContent(1, 3));
-        denomM->SetBinContent(2, denomM_2d->GetBinContent(1, 2));
-        denomM->SetBinContent(3, denomM_2d->GetBinContent(1, 1));
-
-        denomM->SetBinContent(4, denomM_2d->GetBinContent(2, 1));
-        denomM->SetBinContent(5, denomM_2d->GetBinContent(2, 2));
-        denomM->SetBinContent(6, denomM_2d->GetBinContent(2, 3));
-
-        TH1D *denomM_0 = new TH1D ("denominator0", "denominator0",    2, -1500., 1500.);
-        TH1D *denomM_1 = new TH1D ("denominator1", "denominator1",    2, -1500., 1500.);
-        TH1D *denomM_2 = new TH1D ("denominator2", "denominator2",    2, -1500., 1500.);
-
-        denomM_2->SetBinContent(1, denomM_2d->GetBinContent(1, 3));
-        denomM_1->SetBinContent(1, denomM_2d->GetBinContent(1, 2));
-        denomM_0->SetBinContent(1, denomM_2d->GetBinContent(1, 1));
-
-        denomM_0->SetBinContent(2, denomM_2d->GetBinContent(2, 1));
-        denomM_1->SetBinContent(2, denomM_2d->GetBinContent(2, 2));
-        denomM_2->SetBinContent(2, denomM_2d->GetBinContent(2, 3));
-		
-
-
-
-        TFile *file_nopTreweighting = new TFile("../acceptance/mcnlo_nopTreweighting/accept_" + acceptanceName + ".root");
-
-        TH2D *denomM_nopTreweighting_2d = (TH2D *) file_nopTreweighting->Get("denominator_" + acceptanceName + "_" + Var2D);
-        TH1D *denomM_nopTreweighting = new TH1D ("denomnopTreweighting", "denomnopTreweighting",    nbins2D, xbins2D);
-
-        denomM_nopTreweighting->SetBinContent(1, denomM_nopTreweighting_2d->GetBinContent(1, 3));
-        denomM_nopTreweighting->SetBinContent(2, denomM_nopTreweighting_2d->GetBinContent(1, 2));
-        denomM_nopTreweighting->SetBinContent(3, denomM_nopTreweighting_2d->GetBinContent(1, 1));
-
-        denomM_nopTreweighting->SetBinContent(4, denomM_nopTreweighting_2d->GetBinContent(2, 1));
-        denomM_nopTreweighting->SetBinContent(5, denomM_nopTreweighting_2d->GetBinContent(2, 2));
-        denomM_nopTreweighting->SetBinContent(6, denomM_nopTreweighting_2d->GetBinContent(2, 3));
-
-        TH1D *denomM_nopTreweighting_0 = new TH1D ("denominator0nopTreweighting", "denominator0nopTreweighting",    2, -1500., 1500.);
-        TH1D *denomM_nopTreweighting_1 = new TH1D ("denominator1nopTreweighting", "denominator1nopTreweighting",    2, -1500., 1500.);
-        TH1D *denomM_nopTreweighting_2 = new TH1D ("denominator2nopTreweighting", "denominator2nopTreweighting",    2, -1500., 1500.);
-
-        denomM_nopTreweighting_2->SetBinContent(1, denomM_nopTreweighting_2d->GetBinContent(1, 3));
-        denomM_nopTreweighting_1->SetBinContent(1, denomM_nopTreweighting_2d->GetBinContent(1, 2));
-        denomM_nopTreweighting_0->SetBinContent(1, denomM_nopTreweighting_2d->GetBinContent(1, 1));
-
-        denomM_nopTreweighting_0->SetBinContent(2, denomM_nopTreweighting_2d->GetBinContent(2, 1));
-        denomM_nopTreweighting_1->SetBinContent(2, denomM_nopTreweighting_2d->GetBinContent(2, 2));
-        denomM_nopTreweighting_2->SetBinContent(2, denomM_nopTreweighting_2d->GetBinContent(2, 3));
-		*/
-
-
 
 
         for (Int_t x = 1; x <= nbinsx_gen; x++)
