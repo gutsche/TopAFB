@@ -113,8 +113,8 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 		if( iVar < 2 ) nbinsx_gen = nbinsx2D*2;
 		else nbinsx_gen = nbinsx2D;
 
-		nbinsx_reco = nbinsx_gen*2;
-		//nbinsx_reco = nbinsx_gen;
+		//nbinsx_reco = nbinsx_gen*2;
+		nbinsx_reco = nbinsx_gen;
 
 		double* genbins;
 		double* recobins;
@@ -156,10 +156,12 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 		//for testing purposes
         TH2D *hData_bkgSub_rewrapped = new TH2D ("bkgsub", "bkgsub", nbinsx_reco, recobins, nbinsy2D, ybins2D);
         //TH2D *hData_unwrapped_rewrapped = new TH2D ("lotsofwrap", "lotsofwrap", nbinsx2D, xbins2D, nbinsy2D, ybins2D);
-		TH2D *hStab_num = new TH2D ("stabnum", "Stability Numerator", nbinsx_gen, genbins, nbinsy2D, ybins2D);
-		TH2D *hPur_num = new TH2D ("purnum", "Purity Numerator", nbinsx_reco, recobins, nbinsy2D, ybins2D);
-		TH2D *hStab_den = new TH2D ("stabden", "Stability Denominator", nbinsx_gen, genbins, nbinsy2D, ybins2D);
-		TH2D *hPur_den = new TH2D ("purden", "Purity Denominator", nbinsx_reco, recobins, nbinsy2D, ybins2D);
+		// TH2D *hStab_num = new TH2D ("stabnum", "Stability Numerator", nbinsx_gen, genbins, nbinsy2D, ybins2D);
+		// TH2D *hPur_num = new TH2D ("purnum", "Purity Numerator", nbinsx_reco, recobins, nbinsy2D, ybins2D);
+		// TH2D *hStab_den = new TH2D ("stabden", "Stability Denominator", nbinsx_gen, genbins, nbinsy2D, ybins2D);
+		// TH2D *hPur_den = new TH2D ("purden", "Purity Denominator", nbinsx_reco, recobins, nbinsy2D, ybins2D);
+		TH2D *hPurity = new TH2D("purity", "Purity", nbinsx_gen, genbins, nbinsy2D, ybins2D);
+		TH2D *hStability = new TH2D("stability", "Stability", nbinsx_gen, genbins, nbinsy2D, ybins2D);
 
 		//Unwrapped histograms have n bins (where n = nx*ny), centered around the integers from 1 to n.
 		TH1D *hData_unwrapped = new TH1D ("Data_BkgSub_Unwr", "Unwrapped data with background subtracted", nbinsunwrapped_reco, 0.5, double(nbinsunwrapped_reco)+0.5);
@@ -296,8 +298,6 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 
 		int measbin = -99;
 		int genbin = -99;
-		int genbin_meas = -99;
-		int measbin_gen = -99;
 
         for (Int_t i = 0; i < ch_top->GetEntries(); i++)
         {
@@ -309,34 +309,33 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
             {
 			  measbin = getUnwrappedBin(hMeas, asymVar, obs2D);
 			  genbin  = getUnwrappedBin(hTrue, asymVar_gen, obs2D_gen);
-			  genbin_meas = getUnwrappedBin(hMeas, asymVar_gen, obs2D_gen); //For purity check
-			  measbin_gen = getUnwrappedBin(hTrue, asymVar, obs2D); //For stability check
 
 			  fillUnderOverFlow(hMeas, asymVar, obs2D, weight, Nsolns);
 			  fillUnderOverFlow(hTrue, asymVar_gen, obs2D_gen, weight, Nsolns);
 			  fillUnderOverFlow(hTrue_vs_Meas, measbin, genbin, weight, Nsolns);
-			  fillUnderOverFlow(hStab_den, asymVar_gen, obs2D_gen, weight, Nsolns);
-			  fillUnderOverFlow(hPur_den, asymVar, obs2D, weight, Nsolns);
-			  if( measbin == genbin_meas ) fillUnderOverFlow(hPur_num, asymVar, obs2D, weight, Nsolns);
-			  if( genbin == measbin_gen ) fillUnderOverFlow(hStab_num, asymVar_gen, obs2D_gen, weight, Nsolns);
-
 			  if ( combineLepMinus )
                 {
 				  measbin = getUnwrappedBin(hMeas, asymVarMinus, obs2D);
 				  genbin  = getUnwrappedBin(hTrue, asymVarMinus_gen, obs2D_gen);
-				  genbin_meas = getUnwrappedBin(hMeas, asymVarMinus_gen, obs2D_gen);
-				  measbin_gen = getUnwrappedBin(hTrue, asymVarMinus, obs2D);
 
 				  fillUnderOverFlow(hMeas, asymVarMinus, obs2D, weight, Nsolns);
 				  fillUnderOverFlow(hTrue, asymVarMinus_gen, obs2D_gen, weight, Nsolns);
 				  fillUnderOverFlow(hTrue_vs_Meas, measbin, genbin, weight, Nsolns);
-				  fillUnderOverFlow(hStab_den, asymVarMinus_gen, obs2D_gen, weight, Nsolns);
-				  fillUnderOverFlow(hPur_den, asymVarMinus, obs2D, weight, Nsolns);
-				  if( measbin == genbin_meas ) fillUnderOverFlow(hPur_num, asymVarMinus, obs2D, weight, Nsolns);
-				  if( genbin == measbin_gen ) fillUnderOverFlow(hStab_num, asymVarMinus_gen, obs2D_gen, weight, Nsolns);
                 }
             }
         }
+
+		for( int i=1; i<=nbinsx_gen; i++) {
+		  for( int j=1; j<=nbinsy2D; j++) {
+
+			int k = (j-1)*nbinsx_gen + i; //bin number in the unwrapped version
+			hPurity->SetBinContent( i, j, hTrue_vs_Meas->GetBinContent(k,k) / hMeas->GetBinContent(i,j) );
+			hStability->SetBinContent( i, j, hTrue_vs_Meas->GetBinContent(k,k) / hTrue->GetBinContent(i,j) );
+
+		  }
+		}
+
+		if( nbinsx_gen != nbinsx_reco ) cout << "\n***WARNING: Purity and stability plots are broken, because nbinsx_gen != nbinsx_reco!!!\n" << endl;
 
         RooUnfoldResponse response (hMeas, hTrue, hTrue_vs_Meas);
 
@@ -487,13 +486,11 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 
         TCanvas *c_purstab = new TCanvas("c_purstab", "c_purstab", 650, 600);
 		gStyle->SetPadRightMargin(0.15);
-		hPur_num->Divide(hPur_den);
-		hStab_num->Divide(hStab_den);
-        hPur_num->SetTitle("Purity;"+xaxislabel+";"+yaxislabel);
-        hStab_num->SetTitle("Stability;"+xaxislabel+";"+yaxislabel);
-        hPur_num->Draw("COLZ");
+        hPurity->SetTitle("Purity;"+xaxislabel+";"+yaxislabel);
+        hStability->SetTitle("Stability;"+xaxislabel+";"+yaxislabel);
+        hPurity->Draw("COLZ");
         c_purstab->SaveAs("purity_" + acceptanceName +"_" + Var2D + ".svg");
-        hStab_num->Draw("COLZ");
+        hStability->Draw("COLZ");
         c_purstab->SaveAs("stability_" + acceptanceName +"_" + Var2D + ".svg");
 
 
