@@ -1,0 +1,45 @@
+#ignore all plots
+*.pdf
+*.eps
+*.gif
+*.svg
+
+#ignore compiled C++ files/libraries
+*.d
+*.so
+*.o
+
+#ignore compiled components of RooUnfold
+libRooUnfold.rootmap
+RooUnfold/tmp
+TUnfold_2d_dan/tmp
+
+#ignore the various plots that are stored in .C format
+1D_reco_*.C
+2D_*_reco_*.C
+*_unfolded_*.C
+Response_*.C
+*_LinearityCheck*.C
+*_Pull.C
+
+#ignore babies, and plots stored in .root format
+*.root
+
+#ignore log files and output text files
+*.log
+*summary*.txt
+p1_f0_*.txt
+
+#ignore backup files
+*.h~
+*.C~
+*.cxx~
+.gitignore~
+
+#Random things we don't want to commit
+AutoDict_vector_vector_float_allocator_float*
+
+#If you have your own files/subdirectories for miscellaneous purposes, put them here
+TUnfold_test_*/
+RooUnfold_2_scanL/*
+RooUnfold_2_scanL_binningtest/*

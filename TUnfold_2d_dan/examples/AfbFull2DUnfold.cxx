@@ -156,6 +156,10 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 		//for testing purposes
         TH2D *hData_bkgSub_rewrapped = new TH2D ("bkgsub", "bkgsub", nbinsx_reco, recobins, nbinsy2D, ybins2D);
         //TH2D *hData_unwrapped_rewrapped = new TH2D ("lotsofwrap", "lotsofwrap", nbinsx2D, xbins2D, nbinsy2D, ybins2D);
+		TH2D *hStab_num = new TH2D ("stabnum", "Stability Numerator", nbinsx_gen, genbins, nbinsy2D, ybins2D);
+		TH2D *hPur_num = new TH2D ("purnum", "Purity Numerator", nbinsx_reco, recobins, nbinsy2D, ybins2D);
+		TH2D *hStab_den = new TH2D ("stabden", "Stability Denominator", nbinsx_gen, genbins, nbinsy2D, ybins2D);
+		TH2D *hPur_den = new TH2D ("purden", "Purity Denominator", nbinsx_reco, recobins, nbinsy2D, ybins2D);
 
 		//Unwrapped histograms have n bins (where n = nx*ny), centered around the integers from 1 to n.
 		TH1D *hData_unwrapped = new TH1D ("Data_BkgSub_Unwr", "Unwrapped data with background subtracted", nbinsunwrapped_reco, 0.5, double(nbinsunwrapped_reco)+0.5);
@@ -292,6 +296,8 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 
 		int measbin = -99;
 		int genbin = -99;
+		int genbin_meas = -99;
+		int measbin_gen = -99;
 
         for (Int_t i = 0; i < ch_top->GetEntries(); i++)
         {
@@ -303,18 +309,31 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
             {
 			  measbin = getUnwrappedBin(hMeas, asymVar, obs2D);
 			  genbin  = getUnwrappedBin(hTrue, asymVar_gen, obs2D_gen);
+			  genbin_meas = getUnwrappedBin(hMeas, asymVar_gen, obs2D_gen); //For purity check
+			  measbin_gen = getUnwrappedBin(hTrue, asymVar, obs2D); //For stability check
 
 			  fillUnderOverFlow(hMeas, asymVar, obs2D, weight, Nsolns);
 			  fillUnderOverFlow(hTrue, asymVar_gen, obs2D_gen, weight, Nsolns);
 			  fillUnderOverFlow(hTrue_vs_Meas, measbin, genbin, weight, Nsolns);
+			  fillUnderOverFlow(hStab_den, asymVar_gen, obs2D_gen, weight, Nsolns);
+			  fillUnderOverFlow(hPur_den, asymVar, obs2D, weight, Nsolns);
+			  if( measbin == genbin_meas ) fillUnderOverFlow(hPur_num, asymVar, obs2D, weight, Nsolns);
+			  if( genbin == measbin_gen ) fillUnderOverFlow(hStab_num, asymVar_gen, obs2D_gen, weight, Nsolns);
+
 			  if ( combineLepMinus )
                 {
 				  measbin = getUnwrappedBin(hMeas, asymVarMinus, obs2D);
 				  genbin  = getUnwrappedBin(hTrue, asymVarMinus_gen, obs2D_gen);
+				  genbin_meas = getUnwrappedBin(hMeas, asymVarMinus_gen, obs2D_gen);
+				  measbin_gen = getUnwrappedBin(hTrue, asymVarMinus, obs2D);
 
 				  fillUnderOverFlow(hMeas, asymVarMinus, obs2D, weight, Nsolns);
 				  fillUnderOverFlow(hTrue, asymVarMinus_gen, obs2D_gen, weight, Nsolns);
 				  fillUnderOverFlow(hTrue_vs_Meas, measbin, genbin, weight, Nsolns);
+				  fillUnderOverFlow(hStab_den, asymVarMinus_gen, obs2D_gen, weight, Nsolns);
+				  fillUnderOverFlow(hPur_den, asymVarMinus, obs2D, weight, Nsolns);
+				  if( measbin == genbin_meas ) fillUnderOverFlow(hPur_num, asymVarMinus, obs2D, weight, Nsolns);
+				  if( genbin == measbin_gen ) fillUnderOverFlow(hStab_num, asymVarMinus_gen, obs2D_gen, weight, Nsolns);
                 }
             }
         }
@@ -439,11 +458,14 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
 
 		/////////////////////////////////////////////////////////////////////////////////////////////
 		/////////////// 4. Output a bunch of histograms and tables //////////////////////////////////
+		float rmargin = gStyle->GetPadRightMargin();
+		gStyle->SetPadRightMargin(0.17);
 
-        TCanvas *c_data = new TCanvas("c_data", "c_data");
+        TCanvas *c_data = new TCanvas("c_data", "c_data", 675, 600);
         gStyle->SetPalette(1);
         hData_bkgSub_rewrapped->SetTitle("Data (background subtracted);"+xaxislabel+";"+yaxislabel);
         hData_bkgSub_rewrapped->Draw("COLZ");
+		hData_bkgSub_rewrapped->GetZaxis()->SetMoreLogLabels();
         c_data->SetLogz();
         c_data->SaveAs("data_" + acceptanceName +"_" + Var2D + ".eps");
 		hData_bkgSub->SetTitle("Unwrapped Data (background subtracted);Bin number;Entries per bin");
@@ -451,6 +473,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         c_data->SaveAs("dataunwrapped_" + acceptanceName +"_" + Var2D + ".eps");
 
         hTrue->SetTitle("True MC;"+xaxislabel+";"+yaxislabel);
+		hTrue->GetZaxis()->SetMoreLogLabels();
 		hTrue->Draw("COLZ");
         c_data->SaveAs("true_" + acceptanceName +"_" + Var2D + ".eps");
 		hTrue_unwrapped->SetTitle("Unwrapped Truth;Bin number;Entries per bin");
@@ -458,11 +481,23 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         c_data->SaveAs("trueunwrapped_" + acceptanceName +"_" + Var2D + ".eps");
 
 		hData_unfolded->SetTitle("Unfolded Data;"+xaxislabel+";"+yaxislabel);
+		hData_unfolded->GetZaxis()->SetMoreLogLabels();
 		hData_unfolded->Draw("COLZ");
         c_data->SaveAs("unfolded_" + acceptanceName +"_" + Var2D + ".eps");
 
+        TCanvas *c_purstab = new TCanvas("c_purstab", "c_purstab", 650, 600);
+		gStyle->SetPadRightMargin(0.15);
+		hPur_num->Divide(hPur_den);
+		hStab_num->Divide(hStab_den);
+        hPur_num->SetTitle("Purity;"+xaxislabel+";"+yaxislabel);
+        hStab_num->SetTitle("Stability;"+xaxislabel+";"+yaxislabel);
+        hPur_num->Draw("COLZ");
+        c_purstab->SaveAs("purity_" + acceptanceName +"_" + Var2D + ".svg");
+        hStab_num->Draw("COLZ");
+        c_purstab->SaveAs("stability_" + acceptanceName +"_" + Var2D + ".svg");
 
-		TCanvas *c1 = new TCanvas("c1","c1",1200,400);
+
+		TCanvas *c1 = new TCanvas("c1","c1",1300,400);
 		c1->Divide(3,1);
 		c1->cd(1);
 		hData_bkgSub_rewrapped->Draw("COLZ");
@@ -481,7 +516,7 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
             c_d->SaveAs(Var2D + "_D_2D_" + acceptanceName + Region + ".pdf");
         }
 
-        TCanvas *c_resp = new TCanvas("c_resp", "c_resp");
+        TCanvas *c_resp = new TCanvas("c_resp", "c_resp", 650, 600);
         TH2D *hResp = (TH2D *) response.Hresponse();
         gStyle->SetPalette(1);
 		hResp->SetTitle("Migration matrix");
@@ -490,6 +525,8 @@ void AfbUnfoldExample(TString Var2D = "mtt", double scalettdil = 1., double scal
         hResp->Draw("COLZ");
         c_resp->SetLogz();
         c_resp->SaveAs(Var2D + "_Response_true2D_" + acceptanceName + Region + ".pdf");
+
+		gStyle->SetPadRightMargin(rmargin);
 
 		// Make acceptance corrections ///////////////////////////////////////////////////
 

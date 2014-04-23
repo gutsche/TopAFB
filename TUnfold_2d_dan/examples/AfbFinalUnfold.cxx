@@ -95,8 +95,8 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
 		if( iVar < 2 ) nbinsx_gen = nbins1D*2;
 		else nbinsx_gen = nbins1D;
 
-		nbinsx_reco = nbinsx_gen*2;
-		//nbinsx_reco = nbinsx_gen;
+		//nbinsx_reco = nbinsx_gen*2;
+		nbinsx_reco = nbinsx_gen;
 
 		double* genbins;
 		double* recobins;
@@ -134,6 +134,10 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
         TH1D *hTrue = new TH1D ("true", "Truth",    nbinsx_gen, genbins);
         TH1D *hMeas = new TH1D ("meas", "Measured", nbinsx_reco, recobins);
         TH1D *denominatorM_nopTreweighting = new TH1D ("denominatorM_nopTreweighting", "denominatorM_nopTreweighting", nbinsx_gen, genbins);
+		TH1D *hPur_num = new TH1D("purnum", "Purity numerator", nbinsx_reco, recobins);
+		TH1D *hPur_den = new TH1D("purden", "Purity denominator", nbinsx_reco, recobins);
+		TH1D *hStab_num = new TH1D("stabnum", "Stability numerator", nbinsx_gen, genbins);
+		TH1D *hStab_den = new TH1D("stabden", "Stability denominator", nbinsx_gen, genbins);
 
         TH2D *hTrue_vs_Meas = new TH2D ("true_vs_meas", "True vs Measured", nbinsx_reco, recobins, nbinsx_gen, genbins);
 
@@ -307,34 +311,78 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
             //        fillUnderOverFlow(hTrue_vs_Meas, observableMinus, observableMinus_gen, weight, Nsolns);
             //      }
             // } else if (Region=="") {
+
+			int measbin = -99;
+			int genbin = -99;
+			int genbin_meas = -99;
+			int measbin_gen = -99;
+
             if ( (acceptanceName == "lepChargeAsym") || (acceptanceName == "lepAzimAsym") || (acceptanceName == "lepAzimAsym2") )
             {
+			  measbin = hMeas->FindBin(observable);
+			  genbin  = hTrue->FindBin(observable_gen);
+			  genbin_meas = hMeas->FindBin(observable_gen);
+			  measbin_gen = hTrue->FindBin(observable);
+
                 //response.Fill (observable, observable_gen, weight);
                 fillUnderOverFlow(hMeas, observable, weight, Nsolns);
                 fillUnderOverFlow(hTrue, observable_gen, weight, Nsolns);
                 fillUnderOverFlow(hTrue_vs_Meas, observable, observable_gen, weight, Nsolns);
+				fillUnderOverFlow(hPur_den, observable, weight, Nsolns);
+				fillUnderOverFlow(hStab_den, observable_gen, weight, Nsolns);
+				if( measbin == genbin_meas ) fillUnderOverFlow(hPur_num, observable, weight, Nsolns);
+				if( genbin == measbin_gen ) fillUnderOverFlow(hStab_num, observable_gen, weight, Nsolns);
+
                 if ( combineLepMinus )
                 {
+				  measbin = hMeas->FindBin(observableMinus);
+				  genbin  = hTrue->FindBin(observableMinus_gen);
+				  genbin_meas = hMeas->FindBin(observableMinus_gen);
+				  measbin_gen = hTrue->FindBin(observableMinus);
+
                     //response.Fill (observableMinus, observableMinus_gen, weight);
                     fillUnderOverFlow(hMeas, observableMinus, weight, Nsolns);
                     fillUnderOverFlow(hTrue, observableMinus_gen, weight, Nsolns);
                     fillUnderOverFlow(hTrue_vs_Meas, observableMinus, observableMinus_gen, weight, Nsolns);
+					fillUnderOverFlow(hPur_den, observableMinus, weight, Nsolns);
+					fillUnderOverFlow(hStab_den, observableMinus_gen, weight, Nsolns);
+					if( measbin == genbin_meas ) fillUnderOverFlow(hPur_num, observableMinus, weight, Nsolns);
+					if( genbin == measbin_gen ) fillUnderOverFlow(hStab_num, observableMinus_gen, weight, Nsolns);
                 }
             }
             else
             {
                 if ( ttmass > 0 )
                 {
+				  measbin = hMeas->FindBin(observable);
+				  genbin  = hTrue->FindBin(observable_gen);
+				  genbin_meas = hMeas->FindBin(observable_gen);
+				  measbin_gen = hTrue->FindBin(observable);
+
                     //response.Fill (observable, observable_gen, weight);
                     fillUnderOverFlow(hMeas, observable, weight, Nsolns);
                     fillUnderOverFlow(hTrue, observable_gen, weight, Nsolns);
                     fillUnderOverFlow(hTrue_vs_Meas, observable, observable_gen, weight, Nsolns);
+					fillUnderOverFlow(hPur_den, observable, weight, Nsolns);
+					fillUnderOverFlow(hStab_den, observable_gen, weight, Nsolns);
+					if( measbin == genbin_meas ) fillUnderOverFlow(hPur_num, observable, weight, Nsolns);
+					if( genbin == measbin_gen ) fillUnderOverFlow(hStab_num, observable_gen, weight, Nsolns);
+
                     if ( combineLepMinus )
                     {
+					  measbin = hMeas->FindBin(observableMinus);
+					  genbin  = hTrue->FindBin(observableMinus_gen);
+					  genbin_meas = hMeas->FindBin(observableMinus_gen);
+					  measbin_gen = hTrue->FindBin(observableMinus);
+
                         //response.Fill (observableMinus, observableMinus_gen, weight);
                         fillUnderOverFlow(hMeas, observableMinus, weight, Nsolns);
                         fillUnderOverFlow(hTrue, observableMinus_gen, weight, Nsolns);
                         fillUnderOverFlow(hTrue_vs_Meas, observableMinus, observableMinus_gen, weight, Nsolns);
+						fillUnderOverFlow(hPur_den, observableMinus, weight, Nsolns);
+						fillUnderOverFlow(hStab_den, observableMinus_gen, weight, Nsolns);
+						if( measbin == genbin_meas ) fillUnderOverFlow(hPur_num, observableMinus, weight, Nsolns);
+						if( genbin == measbin_gen ) fillUnderOverFlow(hStab_num, observableMinus_gen, weight, Nsolns);
                     }
                 }
             }
@@ -532,9 +580,19 @@ void AfbUnfoldExample(double scalettdil = 1., double scalettotr = 1., double sca
         //c_resp->SaveAs("Response_" + acceptanceName + Region + ".pdf");
         //c_resp->SaveAs("Response_" + acceptanceName + Region + ".C");
         //c_resp->SaveAs("Response_" + acceptanceName + Region + ".root");
+
+        TCanvas *c_purstab = new TCanvas("c_purstab", "c_purstab");
+		hPur_num->Divide(hPur_den);
+		hStab_num->Divide(hStab_den);
+        hPur_num->SetTitle("Purity;"+xaxislabel+";"+yaxislabel);
+        hStab_num->SetTitle("Stability;"+xaxislabel+";"+yaxislabel);
+        hPur_num->Draw();
+        c_purstab->SaveAs("1D_purity_" + acceptanceName + ".svg");
+        hStab_num->Draw();
+        c_purstab->SaveAs("1D_stability_" + acceptanceName + ".svg");
 		
 
-        TFile *file = new TFile("../acceptance/old_800_gensplit/accept_" + acceptanceName + ".root");
+        TFile *file = new TFile("../acceptance/old_800_nosplit/accept_" + acceptanceName + ".root");
         TH1D *acceptM = (TH1D *) file->Get("accept_" + acceptanceName);
         acceptM->Scale(1.0 / acceptM->Integral());
 
